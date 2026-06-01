@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 
 from db.database import Base
 
-
 class Answer(Base):
     __tablename__ = "answers"
     id = Column(String, primary_key=True)
