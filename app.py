@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+import models
 from api.v1.api import api_router
 
 app = FastAPI()

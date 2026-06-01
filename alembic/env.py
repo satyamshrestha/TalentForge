@@ -10,8 +10,8 @@ from models.resume import Resume
 from models.interview import Interview
 from models.question import Question
 from models.answer import Answer
-from db.database import Base
 from utils.config import settings
+from db.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
