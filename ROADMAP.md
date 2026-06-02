@@ -1,7 +1,7 @@
 Phase 1
-Project Setup
-Database Design
-Authentication
+Project Setup ✅
+Database Design ✅
+Authentication 
 RBAC
 
 Phase 2
