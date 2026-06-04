@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from schemas.user_schema import UserSignup, UserResponse, TokenResponse
+from schemas.user_schema import UserSignup, UserResponse, TokenResponse, RefreshTokenRequest
 from auth.deps import get_current_user
 from db.deps import get_db
 from models.user import User
@@ -43,3 +43,10 @@ def get_me(
         "ID": current_user.id,
         "Email": current_user.email
     }
+
+@router.post("/refresh")
+def refresh_token(
+    data: RefreshTokenRequest,
+    service: UserService = Depends(get_user_service)
+):
+    return service.refresh_access_token(data.refresh_token)
