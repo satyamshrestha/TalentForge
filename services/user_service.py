@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from auth.hashing import hash_password, verify_password
-from auth.jwt_handler import create_access_token, create_refresh_token, verify_access_token
+from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
 from models.user import User
 from repositories.user_repository import UserRepository
 
@@ -54,17 +54,25 @@ class UserService:
     
     def refresh_access_token(
         self,
+        db: Session,
         refresh_token: str
     ):
-        payload = verify_access_token(refresh_token)
+        payload = verify_refresh_token(refresh_token)
         if payload is None:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid refresh token!"
             )
         user_id = payload.get("sub")
+        user = self.repository.get_by_id(db, user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found!"
+            )
         access_token = create_access_token({"sub": user_id})
-        
+
         return {
             "access_token": access_token,
             "token_type": "bearer"

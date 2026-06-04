@@ -47,6 +47,7 @@ def get_me(
 @router.post("/refresh")
 def refresh_token(
     data: RefreshTokenRequest,
+    db: Session = Depends(get_db),
     service: UserService = Depends(get_user_service)
 ):
-    return service.refresh_access_token(data.refresh_token)
+    return service.refresh_access_token(db, data.refresh_token)
