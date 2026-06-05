@@ -16,7 +16,7 @@ class ResumeService:
     def create_resume(
         self,
         db: Session,
-        user: User,
+        current_user: User,
         file_url: str,
         parsed_text: str
     ):
@@ -24,7 +24,7 @@ class ResumeService:
             id=str(uuid.uuid4()),
             file_url=file_url,
             parsed_text=parsed_text,
-            user_id=user.id
+            user_id=current_user.id
         )
         return self.repository.create_resume(db, resume)
     
@@ -51,10 +51,10 @@ class ResumeService:
         file_url: str,
         parsed_text: str
     ):
-        resume = self._get_owned_resume(db, id, current_user.id)
+        resume = self._get_owned_resume(db, id, current_user)
         resume.file_url = file_url
         resume.parsed_text = parsed_text
-        return self.repository.update_resume(db, resume)
+        return self.repository.persist(db, resume)
     
     def delete_resume(
         self,
@@ -62,19 +62,19 @@ class ResumeService:
         id: str,
         current_user: User
     ):
-        resume = self._get_owned_resume(db, id, current_user.id)
-
-        return self.repository.delete_resume(db, resume)       
+        resume = self._get_owned_resume(db, id, current_user)
+        self.repository.delete_resume(db, resume)       
+        return True
 
     def _get_owned_resume(
         self,
         db: Session,
         id: str,
-        user_id: str
+        current_user: User
     ):
         resume = self.repository.get_resume_by_id(db, id)
         if not resume:
             raise HTTPException(status_code=404, detail="Resume does not exist!")
-        if resume.user_id != user_id:
+        if resume.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Resume does not belong to the current user!")
         return resume

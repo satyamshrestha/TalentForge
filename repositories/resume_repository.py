@@ -28,14 +28,14 @@ class ResumeRepository:
     ):
         return (db.query(Resume).filter(Resume.user_id==user_id).all())
     
-    def update_resume(
+    def persist(
         self,
         db: Session,
-        updated_resume: Resume
+        resume: Resume
     ):
         db.commit()
-        db.refresh(updated_resume)
-        return updated_resume
+        db.refresh(resume)
+        return resume
     
     def delete_resume(
         self,
