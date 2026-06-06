@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from models.resume import Resume
 from models.user import User
 from repositories.resume_repository import ResumeRepository
+from tasks import process_resume
 
 class ResumeService:
     def __init__(
@@ -26,7 +27,9 @@ class ResumeService:
             parsed_text=parsed_text,
             user_id=current_user.id
         )
-        return self.repository.create_resume(db, resume)
+        resume = self.repository.create_resume(db, resume)
+        process_resume.delay(resume.id)
+        return resume
     
     def get_resume(
         self,
