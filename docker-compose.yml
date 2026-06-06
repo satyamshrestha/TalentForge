@@ -7,6 +7,7 @@ services:
       - .:/app
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:17
@@ -35,6 +36,24 @@ services:
 
     depends_on:
       - db
+
+  redis:
+    image: redis:latest
+
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+
+    command: celery -A celery_app.celery worker --loglevel=info
+    
+    volumes:
+      - .:/app
+
+    depends_on:
+      - db
+      - redis
       
 volumes:
   postgres_data:
