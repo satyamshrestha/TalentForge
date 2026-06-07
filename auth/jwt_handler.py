@@ -29,7 +29,6 @@ def create_refresh_token(data: dict):
         algorithm=settings.ALGORITHM
     )
 
-
 def verify_access_token(token: str):
     try:
         payload = jwt.decode(

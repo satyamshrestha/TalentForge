@@ -1,37 +1,27 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 
 from auth.deps import get_current_user
 from db.deps import get_db
 from models.user import User
-from schemas.resume_schema import ResumeCreate, ResumeResponse, ResumeUpdate
+from schemas.resume_schema import ResumeResponse
 from services.deps import get_resume_service
 from services.resume_service import ResumeService
 
 router = APIRouter(prefix="/resumes", tags=["Resume"])
 
-@router.post("/", response_model=ResumeResponse)
-def create_resume(
-    data: ResumeCreate,
+@router.post("/upload", response_model=ResumeResponse)
+def upload_resume(
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):
-    return service.create_resume(
+    return service.upload_resume(
         db,
         current_user,
-        data.file_url,
-        data.parsed_text
+        file
     )
-
-@router.get("/{id}", response_model=ResumeResponse)
-def get_resume_by_id(
-    id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    service: ResumeService = Depends(get_resume_service)
-):
-    return service.get_resume(db, id, current_user)
 
 @router.get("/me", response_model=list[ResumeResponse])
 def get_my_resumes(
@@ -41,21 +31,14 @@ def get_my_resumes(
 ):
     return service.get_my_resumes(db, current_user)
 
-@router.put("/{id}", response_model=ResumeResponse)
-def update_resume(
+@router.get("/{id}", response_model=ResumeResponse)
+def get_resume_by_id(
     id: str,
-    data: ResumeUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):
-    return service.update_resume(
-        db, 
-        id=id,
-        current_user=current_user,
-        file_url=data.file_url,
-        parsed_text=data.parsed_text
-    )
+    return service.get_resume(db, id, current_user)
 
 @router.delete("/{id}")
 def delete_resume(

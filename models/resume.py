@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, String, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.database import Base
@@ -6,12 +6,11 @@ from db.database import Base
 class Resume(Base):
     __tablename__ = "resumes"
     id = Column(String, primary_key=True)
-    file_url = Column(String)
-    parsed_text = Column(String)
-    user_id = Column(
-        String,
-        ForeignKey("users.id")
-    )
+    file_path = Column(String, nullable=False)
+    parsed_text = Column(JSON, nullable=True)
+    status = Column(String, nullable=False, default="PENDING") #PENDING | UPLOADED | PROCESSING | COMPLETED | FAILED
+    error_message = Column(String, nullable=True)
+    user_id = Column(String, ForeignKey("users.id"))
     user = relationship(
         "User",
         back_populates="resumes"

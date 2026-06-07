@@ -1,17 +1,11 @@
 from pydantic import BaseModel
 
-class ResumeCreate(BaseModel):
-    file_url: str
-    parsed_text: str
-
-class ResumeUpdate(BaseModel):
-    file_url: str
-    parsed_text: str
-
 class ResumeResponse(BaseModel):
     id: str
-    file_url: str
-    parsed_text: str
+    file_path: str
+    parsed_text: dict | None
+    status: str
+    error_message: str | None
     user_id: str
 
     class Config:

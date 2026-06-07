@@ -1,13 +1,12 @@
-import json
-import uuid
+import json, uuid, os
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 
 from db.redis import redis_client
-from models.resume import Resume
 from models.user import User
-from repositories.resume_repository import ResumeRepository
+from models.resume import Resume
 from tasks import process_resume
+from repositories.resume_repository import ResumeRepository
 
 class ResumeService:
     def __init__(
@@ -16,17 +15,26 @@ class ResumeService:
     ):
         self.repository = repository
 
-    def create_resume(
+    def upload_resume(
         self,
         db: Session,
         current_user: User,
-        file_url: str,
-        parsed_text: str
+        file: UploadFile
     ):
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+        file_name = f"{str(uuid.uuid4())}_{file.filename}"
+        file_path = os.path.join(
+            "uploads",
+            "resumes",
+            file_name
+        )
+        with open(file_path, "wb") as buffer:
+            buffer.write(file.file.read())
         resume = Resume(
             id=str(uuid.uuid4()),
-            file_url=file_url,
-            parsed_text=parsed_text,
+            file_path=file_path,
+            status="PENDING",
             user_id=current_user.id
         )
         resume = self.repository.create_resume(db, resume)
@@ -35,14 +43,6 @@ class ResumeService:
         process_resume.delay(resume.id)
         return resume
     
-    def get_resume(
-        self,
-        db: Session,
-        id: str,
-        current_user: User
-    ):
-        return self._get_owned_resume(db, id, current_user)
-
     def get_my_resumes(
         self,
         db: Session,
@@ -56,8 +56,10 @@ class ResumeService:
         resume_data = [
             {
                 "id": resume.id, 
-                "file_url": resume.file_url, 
+                "file_path": resume.file_path, 
                 "parsed_text": resume.parsed_text, 
+                "status": resume.status,
+                "error_message": resume.error_message,
                 "user_id": resume.user_id
             }
             for resume in resumes
@@ -68,22 +70,14 @@ class ResumeService:
             ex=300
         )
         return resume_data
-    
-    def update_resume(
+
+    def get_resume(
         self,
         db: Session,
         id: str,
-        current_user: User,
-        file_url: str,
-        parsed_text: str
+        current_user: User
     ):
-        resume = self._get_owned_resume(db, id, current_user)
-        resume.file_url = file_url
-        resume.parsed_text = parsed_text
-        resume = self.repository.persist(db, resume)
-        cache_key = self._get_resume_cache_key(current_user.id)
-        redis_client.delete(cache_key)
-        return resume
+        return self._get_owned_resume(db, id, current_user)
     
     def delete_resume(
         self,
@@ -92,6 +86,8 @@ class ResumeService:
         current_user: User
     ):
         resume = self._get_owned_resume(db, id, current_user)
+        if os.path.exists(resume.file_path):
+            os.remove(resume.file_path)
         self.repository.delete_resume(db, resume)
         cache_key = self._get_resume_cache_key(current_user.id)
         redis_client.delete(cache_key)       
