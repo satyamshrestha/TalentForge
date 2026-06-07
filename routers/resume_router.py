@@ -24,14 +24,6 @@ def create_resume(
         data.parsed_text
     )
 
-@router.get("/me", response_model=list[ResumeResponse])
-def get_my_resumes(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    service: ResumeService = Depends(get_resume_service)
-):
-    return service.get_my_resumes(db, current_user)
-
 @router.get("/{id}", response_model=ResumeResponse)
 def get_resume_by_id(
     id: str,
@@ -40,6 +32,14 @@ def get_resume_by_id(
     service: ResumeService = Depends(get_resume_service)
 ):
     return service.get_resume(db, id, current_user)
+
+@router.get("/me", response_model=list[ResumeResponse])
+def get_my_resumes(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    service: ResumeService = Depends(get_resume_service)
+):
+    return service.get_my_resumes(db, current_user)
 
 @router.put("/{id}", response_model=ResumeResponse)
 def update_resume(
