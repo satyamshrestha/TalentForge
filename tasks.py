@@ -4,7 +4,6 @@ from pypdf import PdfReader
 from db.database import SessionLocal
 from models.resume import Resume
 
-
 @celery.task
 def process_resume(id: str):
     db = SessionLocal()
