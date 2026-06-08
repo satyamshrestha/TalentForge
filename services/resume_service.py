@@ -29,6 +29,10 @@ class ResumeService:
             "resumes",
             file_name
         )
+        os.makedirs(
+            os.path.dirname(file_path),
+            exist_ok=True
+        )
         with open(file_path, "wb") as buffer:
             buffer.write(file.file.read())
         resume = Resume(
