@@ -3,10 +3,12 @@ from pypdf import PdfReader
 
 from db.database import SessionLocal
 from models.resume import Resume
+from services.resume_parser import ResumeParser
 
 @celery.task
 def process_resume(id: str):
     db = SessionLocal()
+    parser = ResumeParser()
     resume = None
 
     try:
@@ -25,21 +27,14 @@ def process_resume(id: str):
 
         reader = PdfReader(resume.file_path)
 
-        pages = []
-        full_text = ""
+        text = ""
 
         for page in reader.pages:
-
-            page_text = page.extract_text() or ""
-
-            pages.append(page_text)
-
-            full_text += page_text + "\n"
-
-        resume.parsed_text = {
-            "raw_text": full_text.strip(),
-            "pages": len(reader.pages)
-        }
+            text += (page.extract_text() or "") + "\n"
+            
+        parsed_data = parser.parse(text)
+        parsed_data["pages"] = len(reader.pages)
+        resume.parsed_text = parsed_data
 
         resume.status = "COMPLETED"
         resume.error_message = None
