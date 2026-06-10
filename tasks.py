@@ -4,11 +4,13 @@ from pypdf import PdfReader
 from db.database import SessionLocal
 from models.resume import Resume
 from services.resume_parser import ResumeParser
+from services.resume_analyzer import ResumeAnalyzer
 
 @celery.task
 def process_resume(id: str):
     db = SessionLocal()
     parser = ResumeParser()
+    analyzer = ResumeAnalyzer()
     resume = None
 
     try:
@@ -33,9 +35,12 @@ def process_resume(id: str):
             text += (page.extract_text() or "") + "\n"
             
         parsed_data = parser.parse(text)
-        parsed_data["pages"] = len(reader.pages)
-        resume.parsed_text = parsed_data
+        analysis = analyzer.analyze(parsed_data)
 
+        parsed_data["pages"] = len(reader.pages)
+        parsed_data["analysis"] = analysis
+
+        resume.parsed_text = parsed_data
         resume.status = "COMPLETED"
         resume.error_message = None
 
