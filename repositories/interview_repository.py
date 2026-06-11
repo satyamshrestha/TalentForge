@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from models.interview import Interview
 from models.question import Question
 
-class InterviewRepository():
+class InterviewRepository:
 
     def create_interview(
         self,
