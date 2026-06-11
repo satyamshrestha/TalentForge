@@ -24,7 +24,7 @@ class InterviewRepository():
         db.commit()
         db.refresh(question)
         return question
-
+    
     def get_interview_by_id(
         self,
         db: Session,
