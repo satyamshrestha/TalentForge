@@ -6,6 +6,7 @@ from models.user import User
 from models.interview import Interview
 from models.question import Question
 from repositories.interview_repository import InterviewRepository
+from repositories.question_repository import QuestionRepository
 from repositories.resume_repository import ResumeRepository
 from services.question_generator import QuestionGenerator
 
@@ -14,10 +15,12 @@ class InterviewService:
     def __init__(
         self,
         interview_repository: InterviewRepository,
+        question_repository: QuestionRepository,
         resume_repository: ResumeRepository,
         question_generator: QuestionGenerator        
     ):
         self.interview_repository = interview_repository
+        self.question_repository = question_repository
         self.resume_repository = resume_repository
         self.question_generator = question_generator
 
@@ -36,7 +39,7 @@ class InterviewService:
         analysis = (resume.parsed_text or {}).get("analysis", {})
         skills = analysis.get("backend_skills", [])
         if not skills:
-            raise HTTPException(status_code=404, detail="No backend skills found in resume.")
+            raise HTTPException(status_code=400, detail="No backend skills found in resume.")
         questions = self.question_generator.generate(skills)
 
         interview = Interview(
@@ -53,6 +56,6 @@ class InterviewService:
                 question_text=question_text,
                 interview_id=interview.id
             )
-            self.interview_repository.create_question(db, question)
+            self.question_repository.create_question(db, question)
             
         return self.interview_repository.get_interview_by_id(db, interview.id)
