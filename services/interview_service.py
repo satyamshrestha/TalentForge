@@ -66,3 +66,56 @@ class InterviewService:
         current_user: User
     ):
         return self.interview_repository.get_interview_by_user_id(db, current_user.id)
+    
+    def get_interview_detail(
+        self,
+        db: Session,
+        interview_id: str,
+        current_user: User
+    ):
+        interview = self.interview_repository.get_interview_by_id(db, interview_id)
+        if not interview:
+            raise HTTPException(status_code=404, detail="Interview not found.")
+        if interview.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access Denied!")
+        statistics = self._build_interview_statistics(interview)
+        return {
+            "id": interview.id,
+            "role_target": interview.role_target,
+            "status": interview.status,
+            "statistics": statistics,
+            "questions": interview.questions
+        }
+    
+    def _build_interview_statistics(
+        self,
+        interview: Interview
+    ):
+        total_questions = len(interview.questions)
+        answered_questions = sum(
+            1
+            for question in interview.questions
+            if question.answer
+        )
+        scores = [
+            int(question.answer.score)
+            for question in interview.questions
+            if question.answer
+        ]
+        average_score = (
+            sum(scores)/len(scores)
+            if scores
+            else 0
+        )
+        
+        completion_percentage = (
+            (answered_questions/total_questions) * 100
+            if total_questions
+            else 0
+        )
+        return {
+            "total_questions": total_questions,
+            "answered_questions": answered_questions,
+            "average_score": round(average_score, 2),
+            "completion_percentage": round(completion_percentage, 2)
+        }
