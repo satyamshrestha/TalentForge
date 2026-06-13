@@ -15,3 +15,11 @@ class InterviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class InterviewListReponse(BaseModel):
+    id: str
+    role_target: str | None
+    status: str
+
+    class Config:
+        from_attributes = True

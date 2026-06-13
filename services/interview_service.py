@@ -59,3 +59,10 @@ class InterviewService:
             self.question_repository.create_question(db, question)
             
         return self.interview_repository.get_interview_by_id(db, interview.id)
+    
+    def get_user_interviews(
+        self,
+        db: Session,
+        current_user: User
+    ):
+        return self.interview_repository.get_interview_by_user_id(db, current_user.id)
