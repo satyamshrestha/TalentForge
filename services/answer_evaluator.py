@@ -99,9 +99,7 @@ class AnswerEvaluator:
             5
         )
         if matched_keywords:
-            feedback.append(
-                f"Relevant concepts detected: {', '.join(sorted(matched_keywords))}."
-            )
+            feedback.append(f"Relevant concepts detected: {', '.join(sorted(matched_keywords))}.")
         else:
             feedback.append("No important or relevant concepts detected.")
 
