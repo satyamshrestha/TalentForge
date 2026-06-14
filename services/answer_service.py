@@ -48,10 +48,10 @@ class AnswerService:
         )
         answer = self.answer_repository.create_answer(db, answer)
         interview = question.interview
-        total_questions = len(interview.question)
+        total_questions = len(interview.questions)
         answered_questions = sum(
             1
-            for question in interview.question
+            for question in interview.questions
             if question.answer
         )
         if answered_questions == total_questions:
