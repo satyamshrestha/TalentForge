@@ -27,3 +27,14 @@ class InterviewRepository:
         user_id: str
     ):
         return (db.query(Interview).filter(Interview.user_id==user_id).all())
+
+    def update_interview_status(
+        self,
+        db: Session,
+        interview: Interview,
+        status: str
+    ):
+        interview.status = status
+        db.commit()
+        db.refresh(interview)
+        return interview

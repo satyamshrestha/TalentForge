@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from models.answer import Answer
 from services.answer_evaluator import AnswerEvaluator
 from repositories.answer_repository import AnswerRepository
+from repositories.interview_repository import InterviewRepository
 from repositories.question_repository import QuestionRepository
 
 class AnswerService:
@@ -13,11 +14,14 @@ class AnswerService:
         self,
         answer_repository: AnswerRepository,
         answer_evaluator: AnswerEvaluator,
-        question_repository: QuestionRepository
+        question_repository: QuestionRepository,
+        interview_repository: InterviewRepository
+
     ):
         self.answer_repository = answer_repository
         self.answer_evaluator = answer_evaluator
         self.question_repository = question_repository
+        self.interview_repository = interview_repository
 
     def submit_answer(
         self,
@@ -42,4 +46,18 @@ class AnswerService:
             score=str(evaluation["score"]),
             question_id=question.id
         )
-        return self.answer_repository.create_answer(db, answer)
+        answer = self.answer_repository.create_answer(db, answer)
+        interview = question.interview
+        total_questions = len(interview.question)
+        answered_questions = sum(
+            1
+            for question in interview.question
+            if question.answer
+        )
+        if answered_questions == total_questions:
+            status = "COMPLETED"
+        else:
+            status = "IN_PROGRESS"
+
+        self.interview_repository.update_interview_status(db, interview, status)
+        return answer

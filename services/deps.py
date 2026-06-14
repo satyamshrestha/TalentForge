@@ -32,7 +32,8 @@ def get_answer_service():
     return AnswerService(
         AnswerRepository(),
         AnswerEvaluator(),
-        QuestionRepository()
+        QuestionRepository(),
+        InterviewRepository()
     )
 
 def get_dashboard_service():
