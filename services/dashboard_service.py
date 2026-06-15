@@ -35,9 +35,11 @@ class DashboardService:
             if total_answers
             else 0
         )
+        recent_interviews = self.dashboard_repository.get_recent_interviews(db, current_user.id)
         return {
             "total_resumes": total_resumes,
             "total_interviews": total_interviews,
             "completed_interviews": completed_interviews,
-            "average_interview_score": round(average_interview_score, 2)
+            "average_interview_score": round(average_interview_score, 2),
+            "recent_interviews": recent_interviews
         }

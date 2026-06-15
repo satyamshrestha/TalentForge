@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime, UTC
 
 from db.database import Base
 
@@ -8,10 +9,8 @@ class Interview(Base):
     id = Column(String, primary_key=True)
     role_target = Column(String)
     status = Column(String)
-    user_id = Column(
-        String,
-        ForeignKey("users.id")
-    )
+    created_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
+    user_id = Column(String, ForeignKey("users.id"))
     user = relationship(
         "User",
         back_populates="interviews"

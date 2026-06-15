@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 class QuestionResponse(BaseModel):
@@ -11,15 +12,17 @@ class InterviewResponse(BaseModel):
     id: str
     role_target: str | None
     status: str
+    created_at: datetime
     questions: list[QuestionResponse]
 
     class Config:
         from_attributes = True
 
-class InterviewListReponse(BaseModel):
+class InterviewListResponse(BaseModel):
     id: str
     role_target: str | None
     status: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -50,14 +53,16 @@ class InterviewDetailResponse(BaseModel):
     id: str
     role_target: str
     status: str
+    created_at: datetime
     statistics: InterviewStatisticsResponse
     questions: list[QuestionDetailResponse]
 
     class Config:
         from_attributes = True
-    
+
 class InterviewSummaryResponse(BaseModel):
     interview_id: str
+    created_at: datetime
     average_score: float
     total_questions: int
     answered_questions: int

@@ -31,3 +31,16 @@ class DashboardRepository:
             )
             .count()
         )
+    
+    def get_recent_interviews(
+        self,
+        db: Session,
+        user_id: str
+    ):
+        return (
+            db.query(Interview)
+            .filter(Interview.user_id==user_id)
+            .order_by(Interview.created_at.desc())
+            .limit(5)
+            .all()
+        )

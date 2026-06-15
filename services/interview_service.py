@@ -79,6 +79,7 @@ class InterviewService:
             "id": interview.id,
             "role_target": interview.role_target,
             "status": interview.status,
+            "created_at": interview.created_at,
             "statistics": statistics,
             "questions": interview.questions
         }
@@ -117,6 +118,7 @@ class InterviewService:
 
         return {
             "interview_id": interview.id,
+            "created_at": interview.created_at,
             "average_score": statistics["average_score"],
             "total_questions": statistics["total_questions"],
             "answered_questions": statistics["answered_questions"],
