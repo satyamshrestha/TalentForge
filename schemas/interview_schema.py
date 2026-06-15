@@ -55,3 +55,12 @@ class InterviewDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+class InterviewSummaryResponse(BaseModel):
+    interview_id: str
+    average_score: float
+    total_questions: int
+    answered_questions: int
+    strengths: list[str]
+    weaknesses: list[str]
+    overall_feedback: str

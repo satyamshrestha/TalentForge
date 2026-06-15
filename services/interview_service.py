@@ -73,11 +73,7 @@ class InterviewService:
         interview_id: str,
         current_user: User
     ):
-        interview = self.interview_repository.get_interview_by_id(db, interview_id)
-        if not interview:
-            raise HTTPException(status_code=404, detail="Interview not found.")
-        if interview.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Access Denied!")
+        interview = self._accessible_interview(db, interview_id, current_user)
         statistics = self._build_interview_statistics(interview)
         return {
             "id": interview.id,
@@ -86,6 +82,49 @@ class InterviewService:
             "statistics": statistics,
             "questions": interview.questions
         }
+    
+    def get_interview_summary(
+        self,
+        db: Session,
+        interview_id: str,
+        current_user: User
+    ):
+        interview = self._accessible_interview(db, interview_id, current_user)
+        statistics = self._build_interview_statistics(interview)
+        feedbacks = [
+            question.answer.feedback
+            for question in interview.questions
+            if question.answer
+        ]           # Future enhancement: Use feedbacks to generate more detailed strengths/weaknesses.
+
+        strengths = []
+        weaknesses = []
+        if statistics["average_score"] >= 8:
+            strengths.append("Strong overall interview performance.")
+        elif statistics["average_score"] >= 6:
+            strengths.append("Good backend fundamentals.")
+        else:
+            weaknesses.append("Needs improvement in core backend concepts.")
+        
+        if statistics["average_score"] >= 8:
+            overall_feedback = ("Strong backend knowledge demonstrated.")
+
+        elif statistics["average_score"] >= 6:
+            overall_feedback = ("Good understanding with room for improvement.")
+
+        else:
+            overall_feedback = ("Further practice is recommended.")
+
+        return {
+            "interview_id": interview.id,
+            "average_score": statistics["average_score"],
+            "total_questions": statistics["total_questions"],
+            "answered_questions": statistics["answered_questions"],
+            "strengths": strengths,
+            "weaknesses": weaknesses,
+            "overall_feedback": overall_feedback
+        }
+    
     
     def _build_interview_statistics(
         self,
@@ -119,3 +158,16 @@ class InterviewService:
             "average_score": round(average_score, 2),
             "completion_percentage": round(completion_percentage, 2)
         }
+    
+    def _accessible_interview(
+        self,
+        db: Session,
+        interview_id: str,
+        current_user: User
+    ):
+        interview = self.interview_repository.get_interview_by_id(db, interview_id)
+        if not interview:
+            raise HTTPException(status_code=404, detail="Interview not found!")
+        if interview.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access Denied!")
+        return interview
