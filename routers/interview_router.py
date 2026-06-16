@@ -49,7 +49,7 @@ def get_interview_detail(
 ):
     return service.get_interview_detail(db, interview_id, current_user)
 
-@router.get("/{interview_id}", response_model=MessageResponse)
+@router.delete("/{interview_id}", response_model=MessageResponse)
 def delete_interview(
     interview_id: str,
     current_user: User = Depends(get_current_user),
