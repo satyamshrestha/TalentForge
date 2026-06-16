@@ -127,6 +127,19 @@ class InterviewService:
             "overall_feedback": overall_feedback
         }
     
+    def delete_interview(
+        self,
+        db: Session,
+        interview_id: str,
+        current_user: User
+    ):
+        interview = self._accessible_interview(
+            db,
+            interview_id,
+            current_user
+        )
+        self.interview_repository.delete_interview(db, interview)
+        return {"message": "Interview deleted successfully."}
     
     def _build_interview_statistics(
         self,

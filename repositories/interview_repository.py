@@ -38,3 +38,11 @@ class InterviewRepository:
         db.commit()
         db.refresh(interview)
         return interview
+    
+    def delete_interview(
+        self,
+        db: Session,
+        interview: Interview
+    ):
+        db.delete(interview)
+        db.commit()

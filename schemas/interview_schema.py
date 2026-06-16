@@ -69,3 +69,6 @@ class InterviewSummaryResponse(BaseModel):
     strengths: list[str]
     weaknesses: list[str]
     overall_feedback: str
+
+class MessageResponse(BaseModel):
+    message: str
