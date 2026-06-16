@@ -23,6 +23,15 @@ def create_interview(
 ):
     return service.create_interview_from_resume(db, resume_id, current_user)
 
+@router.post("/{interview_id}/retake", response_model=InterviewResponse)
+def retake_interview(
+    interview_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    service: InterviewService = Depends(get_interview_service)
+):
+    return service.retake_interview(db, interview_id, current_user)
+
 @router.get("/my_interviews", response_model=list[InterviewListResponse])
 def get_user_interviews(
     current_user: User = Depends(get_current_user),

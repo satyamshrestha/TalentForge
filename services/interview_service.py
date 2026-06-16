@@ -60,6 +60,30 @@ class InterviewService:
             
         return self.interview_repository.get_interview_by_id(db, interview.id)
     
+    def retake_interview(
+        self,
+        db: Session,
+        interview_id: str,
+        current_user: User
+    ):
+        original_interview = self._accessible_interview(db, interview_id, current_user)
+        new_interview = Interview(
+            id=str(uuid.uuid4()),
+            role_target=original_interview.role_target,
+            status="CREATED",
+            user_id=current_user.id
+        )
+        new_interview = self.interview_repository.create_interview(db, new_interview)
+        
+        for old_question in original_interview.questions:
+            question = Question(
+                id=str(uuid.uuid4()),
+                question_text=old_question.question_text,
+                interview_id=new_interview.id
+            )
+            self.question_repository.create_question(db, question)
+        return self.interview_repository.get_interview_by_id(db, new_interview.id)
+    
     def get_user_interviews(
         self,
         db: Session,
