@@ -8,6 +8,7 @@ from models.question import Question
 from repositories.interview_repository import InterviewRepository
 from repositories.question_repository import QuestionRepository
 from repositories.resume_repository import ResumeRepository
+from services.audit_log_service import AuditLogService
 from services.question_generator import QuestionGenerator
 
 class InterviewService:
@@ -17,12 +18,14 @@ class InterviewService:
         interview_repository: InterviewRepository,
         question_repository: QuestionRepository,
         resume_repository: ResumeRepository,
-        question_generator: QuestionGenerator        
+        question_generator: QuestionGenerator,
+        audit_log_service: AuditLogService       
     ):
         self.interview_repository = interview_repository
         self.question_repository = question_repository
         self.resume_repository = resume_repository
         self.question_generator = question_generator
+        self.audit_log_service = audit_log_service
 
     def create_interview_from_resume(
         self,
@@ -49,6 +52,13 @@ class InterviewService:
             user_id=current_user.id
         )
         interview = self.interview_repository.create_interview(db, interview)
+        self.audit_log_service.log_action(
+            db,
+            current_user.id,
+            "CREATE_INTERVIEW",
+            "INTERVIEW",
+            interview.id
+        )
 
         for question_text in questions:
             question = Question(
@@ -74,6 +84,13 @@ class InterviewService:
             user_id=current_user.id
         )
         new_interview = self.interview_repository.create_interview(db, new_interview)
+        self.audit_log_service.log_action(
+            db,
+            current_user.id,
+            "RETAKE_INTERVIEW",
+            "INTERVIEW",
+            new_interview.id
+        )
         
         for old_question in original_interview.questions:
             question = Question(
@@ -161,6 +178,13 @@ class InterviewService:
             db,
             interview_id,
             current_user
+        )
+        self.audit_log_service.log_action(
+            db,
+            current_user.id,
+            "DELETE_INTERVIEW",
+            "INTERVIEW",
+            interview.id
         )
         self.interview_repository.delete_interview(db, interview)
         return {"message": "Interview deleted successfully."}

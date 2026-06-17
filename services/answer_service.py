@@ -7,6 +7,7 @@ from services.answer_evaluator import AnswerEvaluator
 from repositories.answer_repository import AnswerRepository
 from repositories.interview_repository import InterviewRepository
 from repositories.question_repository import QuestionRepository
+from services.audit_log_service import AuditLogService
 
 class AnswerService:
 
@@ -15,13 +16,14 @@ class AnswerService:
         answer_repository: AnswerRepository,
         answer_evaluator: AnswerEvaluator,
         question_repository: QuestionRepository,
-        interview_repository: InterviewRepository
-
+        interview_repository: InterviewRepository,
+        audit_log_service: AuditLogService
     ):
         self.answer_repository = answer_repository
         self.answer_evaluator = answer_evaluator
         self.question_repository = question_repository
         self.interview_repository = interview_repository
+        self.audit_log_service = self.audit_log_service
 
     def submit_answer(
         self,
@@ -47,6 +49,13 @@ class AnswerService:
             question_id=question.id
         )
         answer = self.answer_repository.create_answer(db, answer)
+        self.audit_log_service.log_action(
+            db,
+            question.interview.user_id,
+            "SUBMIT_ANSWER",
+            "QUESTION",
+            question.id
+        )
         interview = question.interview
         total_questions = len(interview.questions)
         answered_questions = sum(
