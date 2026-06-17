@@ -31,6 +31,7 @@ def get_interview_service():
         QuestionRepository(),
         ResumeRepository(),
         QuestionGenerator(),
+        get_audit_log_service()
     )
 
 def get_answer_service():
@@ -39,6 +40,7 @@ def get_answer_service():
         AnswerEvaluator(),
         QuestionRepository(),
         InterviewRepository(),
+        get_audit_log_service()
     )
 
 def get_dashboard_service():
