@@ -4,10 +4,7 @@ import logging
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-
 logger = logging.getLogger("talentforge")
-
-
 class LoggingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(
@@ -29,5 +26,4 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             f"Status={response.status_code} "
             f"Duration={duration:.2f}ms"
         )
-
         return response
