@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from models.user import User
@@ -34,8 +34,8 @@ def retake_interview(
 
 @router.get("/my_interviews", response_model=list[InterviewListResponse])
 def get_user_interviews(
-    page: int = 1,
-    size: int = 10,
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
     status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
