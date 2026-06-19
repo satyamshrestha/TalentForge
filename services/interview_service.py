@@ -104,9 +104,12 @@ class InterviewService:
     def get_user_interviews(
         self,
         db: Session,
-        current_user: User
+        current_user: User,
+        page: int = 1,
+        size: int = 10,
+        status: str | None = None
     ):
-        return self.interview_repository.get_interview_by_user_id(db, current_user.id)
+        return self.interview_repository.get_interview_by_user_id(db, current_user.id, page, size, status)
     
     def get_interview_detail(
         self,

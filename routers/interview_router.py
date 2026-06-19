@@ -34,11 +34,14 @@ def retake_interview(
 
 @router.get("/my_interviews", response_model=list[InterviewListResponse])
 def get_user_interviews(
+    page: int = 1,
+    size: int = 10,
+    status: str | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
-    return service.get_user_interviews(db, current_user)
+    return service.get_user_interviews(db, current_user, page, size, status)
 
 @router.get("/{interview_id}/summary", response_model=InterviewSummaryResponse)
 def get_interview_summary(
