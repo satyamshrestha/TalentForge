@@ -1,3 +1,4 @@
+import math
 import uuid
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -109,7 +110,18 @@ class InterviewService:
         size: int = 10,
         status: str | None = None
     ):
-        return self.interview_repository.get_interviews(db, current_user.id, page, size, status)
+        result = self.interview_repository.get_interviews(db, current_user.id, page, size, status)
+        return {
+            "items": result["items"],
+            "page": page,
+            "size": size,
+            "total": result["total"],
+            "pages": math.ceil(
+                result["total"] / size
+                if result["total"]
+                else 1
+            )
+        }
     
     def get_interview_detail(
         self,

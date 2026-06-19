@@ -32,14 +32,18 @@ class InterviewRepository:
         query = (db.query(Interview).filter(Interview.user_id == user_id))
         if status:
             query = query.filter(Interview.status == status)
+        total = query.count()
         offset = (page-1)*size
         query = query.order_by(Interview.created_at.desc())
-        return (
-            query
-            .offset(offset)
-            .limit(size)
-            .all()
-        )
+        return {
+            "items": (
+                query
+                .offset(offset)
+                .limit(size)
+                .all()
+            ),
+            "total": total
+        }
 
     def update_interview_status(
         self,

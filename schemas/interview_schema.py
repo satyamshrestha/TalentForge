@@ -27,6 +27,13 @@ class InterviewListResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class InterviewPaginationResponse(BaseModel):
+    items: list[InterviewListResponse]
+    page: int
+    size: int
+    total: int
+    pages: int
+
 class AnswerDetailResponse(BaseModel):
     id: str
     score: str
