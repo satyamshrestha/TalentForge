@@ -1,0 +1,38 @@
+services:
+  api:
+    image: your-dockerhub-username/talentforge:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:database123@db:5432/talentforge
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+
+  celery_worker:
+    image: your-dockerhub-username/talentforge:latest
+    command: celery -A celery_app.celery worker --loglevel=info
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:database123@db:5432/talentforge
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: database123
+      POSTGRES_DB: talentforge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+
+volumes:
+  postgres_data:
