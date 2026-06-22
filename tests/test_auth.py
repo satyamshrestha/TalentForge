@@ -117,8 +117,7 @@ def test_me_endpoint():
     )
 
     assert response.status_code == 200
-    print(response.json())
-    assert response.json()["email"] == "me@example.com"
+    assert response.json()["Email"] == "me@example.com"
 
 
 def test_me_without_token():
