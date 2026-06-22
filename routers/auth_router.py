@@ -11,7 +11,7 @@ from services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/signup", response_model=UserResponse)
+@router.post("/signup", response_model=UserResponse, status_code=201)
 def signup(
     data: UserSignup,
     db: Session = Depends(get_db),

@@ -39,7 +39,7 @@ def test_duplicate_email_signup():
         }
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def test_login():
@@ -117,6 +117,7 @@ def test_me_endpoint():
     )
 
     assert response.status_code == 200
+    print(response.json())
     assert response.json()["email"] == "me@example.com"
 
 
