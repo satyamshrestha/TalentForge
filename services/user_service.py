@@ -27,7 +27,8 @@ class UserService:
         user = User(
             id=str(uuid.uuid4()),
             email=email,
-            password=hash_password(password)
+            password=hash_password(password),
+            role="student"
         )
         return self.repository.create_user(db, user)
     

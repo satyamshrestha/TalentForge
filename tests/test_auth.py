@@ -7,7 +7,6 @@ def test_signup():
     response = client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Test User",
             "email": "test@example.com",
             "password": "password123"
         }
@@ -24,7 +23,6 @@ def test_duplicate_email_signup():
     client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Test User",
             "email": "duplicate@example.com",
             "password": "password123"
         }
@@ -33,7 +31,6 @@ def test_duplicate_email_signup():
     response = client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Another User",
             "email": "duplicate@example.com",
             "password": "password123"
         }
@@ -46,7 +43,6 @@ def test_login():
     client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Login User",
             "email": "login@example.com",
             "password": "password123"
         }
@@ -72,7 +68,6 @@ def test_login_wrong_password():
     client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Wrong Password User",
             "email": "wrong@example.com",
             "password": "password123"
         }
@@ -93,7 +88,6 @@ def test_me_endpoint():
     client.post(
         "/api/v1/auth/signup",
         json={
-            "name": "Me User",
             "email": "me@example.com",
             "password": "password123"
         }
@@ -118,6 +112,7 @@ def test_me_endpoint():
 
     assert response.status_code == 200
     assert response.json()["Email"] == "me@example.com"
+    assert response.json()["Role"] == "student"
 
 
 def test_me_without_token():
