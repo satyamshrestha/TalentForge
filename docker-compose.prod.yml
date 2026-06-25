@@ -1,6 +1,6 @@
 services:
   api:
-    image: your-dockerhub-username/talentforge:latest
+    image: satyamshrestha/talentforge:latest
     ports:
       - "8000:8000"
     depends_on:
@@ -12,7 +12,7 @@ services:
       ALGORITHM: ${ALGORITHM}
 
   celery_worker:
-    image: your-dockerhub-username/talentforge:latest
+    image: satyamshrestha/talentforge:latest
     command: celery -A celery_app.celery worker --loglevel=info
     depends_on:
       - db

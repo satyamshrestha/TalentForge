@@ -41,7 +41,8 @@ def get_me(
 ):
     return {
         "ID": current_user.id,
-        "Email": current_user.email
+        "Email": current_user.email,
+        "Role": current_user.role
     }
 
 @router.post("/refresh")
