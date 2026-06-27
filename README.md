@@ -1,171 +1,203 @@
-# TalentForge
+# TalentForge 🚀
 
-TalentForge is a production-style backend project built to learn advanced backend engineering concepts including authentication, caching, asynchronous processing, testing, containerization, CI/CD, and eventually system design, observability, and Kubernetes.
-
-The project simulates an AI-powered interview preparation platform where users can upload resumes, generate backend interview questions, take interviews, and receive feedback.
+TalentForge is a production-style backend project built to simulate real-world backend engineering practices. The project focuses on scalable architecture, authentication, authorization, caching, asynchronous processing, containerization, and CI/CD.
 
 ---
 
 # Tech Stack
 
-## Backend
-
-* FastAPI
-* Python 3.12
-* SQLAlchemy ORM
-* Alembic
-
-## Database
-
-* PostgreSQL
-
-## Caching
-
-* Redis
-
-## Asynchronous Tasks
-
-* Celery
-
-## Authentication
-
-* JWT Access Tokens
-* Refresh Tokens
-* OAuth2 Password Flow
-
-## Containerization
-
-* Docker
-* Docker Compose
-
-## DevOps
-
-* GitHub Actions (CI/CD)
-* Docker Hub
-
-## Testing
-
-* Pytest
-* FastAPI TestClient
-* SQLite test database
+* **Framework:** FastAPI
+* **Database:** PostgreSQL 17
+* **ORM:** SQLAlchemy
+* **Database Migrations:** Alembic
+* **Caching:** Redis
+* **Background Tasks:** Celery
+* **Authentication:** JWT + OAuth2 Password Flow
+* **Authorization:** Role-Based Access Control (RBAC)
+* **OAuth2 Scopes:** JWT claims-based permissions
+* **Containerization:** Docker & Docker Compose
+* **Image Registry:** Docker Hub
+* **CI/CD:** GitHub Actions
+* **Testing:** Pytest + SQLite
 
 ---
 
-# Features
+# Project Architecture
+
+```text
+Client
+   ↓
+Routers (API Layer)
+   ↓
+Services (Business Logic)
+   ↓
+Repositories (Data Access)
+   ↓
+Database
+```
+
+Project follows a layered architecture:
+
+```text
+routers → services → repositories → database
+```
+
+---
+
+# Current Features
 
 ## Authentication
 
 * User Signup
 * User Login
-* Password Hashing using bcrypt
+* Password Hashing (bcrypt)
 * JWT Access Tokens
-* Refresh Tokens
+* JWT Refresh Tokens
+* OAuth2 Password Flow
 * Protected Routes
-* Current User Endpoint
+* Current User Dependency
+
+---
+
+## Authorization
+
+### Role-Based Access Control (RBAC)
+
+Roles:
+
+* student
+* teacher
+* admin
+
+Example:
+
+* Admin-only endpoints
+* Role verification dependencies
+* Protected administrative actions
+
+---
+
+## OAuth2 Scopes
+
+JWT tokens contain:
+
+* sub
+* role
+* scopes
+* exp
+* type
+
+Example admin token:
+
+```json
+{
+  "sub": "user-id",
+  "role": "admin",
+  "scopes": [
+    "resume:read",
+    "resume:write",
+    "interview:create",
+    "interview:delete",
+    "admin"
+  ]
+}
+```
+
+---
 
 ## Resume Module
 
 * Resume Upload
-* PDF Storage
 * Resume Retrieval
 * Resume Deletion
 * Ownership Validation
-* Redis Caching
-* Celery Processing Hook
+* File Storage
+* Status Tracking
 
-## Interview Module
+Resume statuses:
 
-* Interview Generation from Resume Skills
-* Interview Retake
-* Interview Statistics
-* Interview Summary
-* Pagination
-* Filtering by Status
-* Interview Deletion
-
-## Audit Logging
-
-* User Action Tracking
-* Interview Activity Logging
+* PENDING
+* PROCESSING
+* COMPLETED
+* FAILED
 
 ---
 
-# Architecture
+## Caching
 
-The project follows a layered architecture:
+Redis cache-aside pattern:
 
-```text
-Routers
-↓
-Services
-↓
-Repositories
-↓
-Database
-```
+* Read-through caching
+* Cache invalidation
+* Reduced database load
+* TTL-based caching
 
-Folder Structure:
+---
 
-```text
-api/
-auth/
-db/
-middleware/
-models/
-repositories/
-routers/
-schemas/
-services/
-tasks/
-tests/
-utils/
-```
+## Background Processing
+
+Celery Worker:
+
+* Asynchronous task execution
+* Background resume processing pipeline
+* Redis-backed message broker
+
+---
+
+## Testing
+
+* Authentication tests
+* Protected route tests
+* RBAC tests
+* SQLite test database
+* GitHub Actions CI pipeline
 
 ---
 
 # Database Models
 
-* User
-* Resume
-* Interview
-* Question
-* Answer
+## User
 
-Relationships:
+* id
+* email
+* password
+* role
 
-```text
-User
- ├── Resumes
- └── Interviews
+## Resume
 
-Interview
- └── Questions
+* id
+* file_path
+* parsed_text
+* status
+* error_message
+* user_id
 
-Question
- └── Answer
-```
+## Interview
+
+* id
+* user_id
+
+## Question
+
+* id
+* interview_id
+
+## Answer
+
+* id
+* question_id
 
 ---
 
 # Docker Setup
 
-## Development Environment
+Development:
 
 ```bash
 docker compose up -d
 ```
 
-Services:
-
-* FastAPI API
-* PostgreSQL
-* Redis
-* Celery Worker
-* pgAdmin
-
----
-
-## Production Environment
+Production:
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d
@@ -173,15 +205,46 @@ docker compose -f docker-compose.prod.yml up -d
 
 ---
 
+# Docker Hub
+
+Image:
+
+```text
+satyamshrestha/talentforge:latest
+```
+
+Pull:
+
+```bash
+docker pull satyamshrestha/talentforge:latest
+```
+
+---
+
 # Running Locally
 
-Create a virtual environment:
+## Clone
+
+```bash
+git clone https://github.com/<your-username>/TalentForge.git
+cd TalentForge
+```
+
+## Create Environment
 
 ```bash
 python -m venv venv
 ```
 
 Activate:
+
+Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Linux:
 
 ```bash
 source venv/bin/activate
@@ -193,15 +256,25 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run:
+---
+
+## Run with Docker
 
 ```bash
-uvicorn app:app --reload
+docker compose up -d
 ```
 
 ---
 
-# Running Tests
+## Apply Migrations
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+---
+
+## Run Tests
 
 ```bash
 pytest
@@ -209,54 +282,51 @@ pytest
 
 ---
 
-# CI/CD Pipeline
+# CI/CD
 
-The project uses GitHub Actions.
+GitHub Actions automatically:
 
-Workflow:
-
-```text
-git push
-    ↓
-Run Tests
-    ↓
-Build Docker Image
-    ↓
-Push Image to Docker Hub
-```
-
-Docker image:
-
-```text
-docker.io/satyamshrestha/talentforge
-```
+* Runs tests on every push
+* Validates application integrity
+* Builds Docker images
+* Prepares project for deployment
 
 ---
 
 # Current Learning Goals
 
-* OAuth2 Authentication
+* Advanced OAuth2
+* Permission-based authorization
 * System Design
-* Observability
+* Observability and Logging
 * Kubernetes
+* Distributed Systems
 * Production Deployment
 
 ---
 
-# Future Features
+# Project Purpose
 
-* AI Resume Parsing
-* AI Interview Feedback
-* Email Notifications
-* Monitoring and Logging
-* Kubernetes Deployment
-* Cloud Deployment
-* API Rate Limiting
-* Distributed Caching
-* Microservices Exploration
+TalentForge is not merely a CRUD application.
+
+It is an engineering playground built to learn:
+
+* Backend Architecture
+* Authentication & Authorization
+* Caching Strategies
+* Asynchronous Processing
+* Containerization
+* CI/CD
+* Production Engineering Practices
+* System Design Concepts
 
 ---
 
-# Purpose
+# Author
 
-TalentForge is primarily a learning project designed to gain hands-on experience with production backend engineering concepts and industry practices.
+**Satyam Shrestha**
+
+AI Computer Engineering Student
+Far East University
+
+Building one feature at a time with consistency and discipline.
