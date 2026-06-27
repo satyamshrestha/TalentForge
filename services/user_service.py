@@ -6,6 +6,7 @@ from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
 from models.user import User
 from repositories.user_repository import UserRepository
+from auth.scopes import ROLE_SCOPES
 
 class UserService:
     def __init__(
@@ -44,8 +45,20 @@ class UserService:
         if not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Invalid credentials!")
         
-        access_token = create_access_token({"sub": user.id})
-        refresh_token = create_refresh_token({"sub": user.id})
+        access_token = create_access_token(
+            {
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
+            }
+        )
+        refresh_token = create_refresh_token(
+            {
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
+            }
+        )
 
         return {
             "access_token": access_token,
@@ -72,7 +85,13 @@ class UserService:
                 status_code=401,
                 detail="User not found!"
             )
-        access_token = create_access_token({"sub": user_id})
+        access_token = create_access_token(
+            {
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
+            }
+        )
 
         return {
             "access_token": access_token,
