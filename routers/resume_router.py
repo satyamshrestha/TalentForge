@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 
-from auth.deps import get_current_user
+from auth.scope_deps import require_scope
 from db.deps import get_db
 from models.user import User
 from schemas.resume_schema import ResumeResponse
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/resumes", tags=["Resume"])
 @router.post("/upload", response_model=ResumeResponse)
 def upload_resume(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("resume:write")),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):
@@ -25,7 +25,7 @@ def upload_resume(
 
 @router.get("/me", response_model=list[ResumeResponse])
 def get_my_resumes(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("resume:read")),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):
@@ -34,7 +34,7 @@ def get_my_resumes(
 @router.get("/{id}", response_model=ResumeResponse)
 def get_resume_by_id(
     id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("resume:read")),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):
@@ -43,7 +43,7 @@ def get_resume_by_id(
 @router.delete("/{id}")
 def delete_resume(
     id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("resume:write")),
     db: Session = Depends(get_db),
     service: ResumeService = Depends(get_resume_service)
 ):

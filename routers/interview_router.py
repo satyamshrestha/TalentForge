@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from auth.scope_deps import require_scope
 from models.user import User
 from db.deps import get_db
 from auth.deps import get_current_user
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/interviews", tags=["Interview"])
 @router.post("/from-resume/{resume_id}", response_model=InterviewResponse)
 def create_interview(
     resume_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:create")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service),
 ):
@@ -26,7 +27,7 @@ def create_interview(
 @router.post("/{interview_id}/retake", response_model=InterviewResponse)
 def retake_interview(
     interview_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:read")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
@@ -37,7 +38,7 @@ def get_user_interviews(
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),
     status: str | None = None,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:read")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
@@ -46,7 +47,7 @@ def get_user_interviews(
 @router.get("/{interview_id}/summary", response_model=InterviewSummaryResponse)
 def get_interview_summary(
     interview_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:read")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
@@ -55,7 +56,7 @@ def get_interview_summary(
 @router.get("/{interview_id}", response_model=InterviewDetailResponse)
 def get_interview_detail(
     interview_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:read")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
@@ -64,7 +65,7 @@ def get_interview_detail(
 @router.delete("/{interview_id}", response_model=MessageResponse)
 def delete_interview(
     interview_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_scope("interview:delete")),
     db: Session = Depends(get_db),
     service: InterviewService = Depends(get_interview_service)
 ):
