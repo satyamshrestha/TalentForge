@@ -9,7 +9,7 @@ class Interview(Base):
     id = Column(String, primary_key=True)
     role_target = Column(String)
     status = Column(String)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     user_id = Column(String, ForeignKey("users.id"))
     user = relationship(
         "User",

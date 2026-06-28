@@ -23,7 +23,7 @@ class AnswerService:
         self.answer_evaluator = answer_evaluator
         self.question_repository = question_repository
         self.interview_repository = interview_repository
-        self.audit_log_service = self.audit_log_service
+        self.audit_log_service = audit_log_service
 
     def submit_answer(
         self,
