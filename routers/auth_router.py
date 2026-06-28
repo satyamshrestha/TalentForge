@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from auth.scope_deps import require_scope
 from schemas.user_schema import UserSignup, UserResponse, TokenResponse, RefreshTokenRequest
 from auth.deps import get_current_user
 from db.deps import get_db
@@ -52,3 +53,11 @@ def refresh_token(
     service: UserService = Depends(get_user_service)
 ):
     return service.refresh_access_token(db, data.refresh_token)
+
+@router.get("/scope-test")
+def scope_test(
+    current_user=Depends(require_scope("admin"))
+):
+    return {
+        "message": "Admin scope works!"
+    }
