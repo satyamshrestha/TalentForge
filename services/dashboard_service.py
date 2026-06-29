@@ -22,7 +22,7 @@ class DashboardService:
         total_resumes = self.dashboard_repository.get_total_resumes(db, current_user.id)
         total_interviews = self.dashboard_repository.get_total_interviews(db, current_user.id)
         completed_interviews = self.dashboard_repository.get_completed_interviews(db, current_user.id)
-        interviews = self.interview_repository.get_interviews(db, current_user.id)
+        interviews = self.interview_repository.get_interviews(db, current_user.id, page=1, size=100)
         total_score = 0
         total_answers = 0
         for interview in interviews:
