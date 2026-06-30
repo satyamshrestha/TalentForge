@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from auth.google_oauth import oauth
 from auth.scope_deps import require_scope
 from schemas.user_schema import UserSignup, UserResponse, TokenResponse, RefreshTokenRequest
 from auth.deps import get_current_user
@@ -11,6 +12,15 @@ from services.deps import get_user_service
 from services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+@router.get("/google/login")
+async def google_login(request: Request):
+    redirect_uri = request.url_for("google_callback")
+
+    return await oauth.google.authorize_redirect(
+        request,
+        redirect_uri
+    )
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
 def signup(

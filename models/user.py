@@ -9,6 +9,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     role = Column(String, default="student", nullable=False)
+    provider = Column(String, nullable=False, default="local")
     resumes = relationship(
         "Resume",
         back_populates="user"
