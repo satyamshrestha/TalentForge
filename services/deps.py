@@ -45,6 +45,5 @@ def get_answer_service():
 
 def get_dashboard_service():
     return DashboardService(
-        DashboardRepository(),
-        InterviewRepository()
+        DashboardRepository()
     )
