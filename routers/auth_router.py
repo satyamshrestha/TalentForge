@@ -10,17 +10,29 @@ from db.deps import get_db
 from models.user import User
 from services.deps import get_user_service
 from services.user_service import UserService
+from utils.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.get("/google/login")
+@router.get("/google/login", include_in_schema=False)
 async def google_login(request: Request):
-    redirect_uri = request.url_for("google_callback")
-
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
     return await oauth.google.authorize_redirect(
         request,
         redirect_uri
     )
+
+@router.get("/google/callback", include_in_schema=False)
+async def google_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+    service: UserService = Depends(get_user_service)
+):
+    token = await oauth.google.authorize_access_token(request)
+
+    user_info = token["userinfo"]
+
+    return service.google_login(db, user_info)
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
 def signup(

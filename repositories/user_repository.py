@@ -20,7 +20,7 @@ class UserRepository:
         db.commit()
         db.refresh(user)
         return user
-    
+
     def get_by_id(
         self,
         db: Session,

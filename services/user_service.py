@@ -11,9 +11,47 @@ from auth.scopes import ROLE_SCOPES
 class UserService:
     def __init__(
         self,
-        repository: UserRepository
+        user_repository: UserRepository
     ):
-        self.repository = repository
+        self.user_repository = user_repository
+
+    def google_login(
+        self,
+        db: Session,
+        user_info: dict
+    ):
+        email = user_info["email"]
+
+        user = self.user_repository.get_by_email(db, email)
+
+        if not user:
+            user = User(
+                id=str(uuid.uuid4()),
+                email=email,
+                password=None,
+                role="student",
+                provider="google"
+            )
+            user = self.user_repository.create_user(db, user)
+
+        access_token = create_access_token(
+            {
+                "sub": user.id,
+                "scope": user.role
+            }
+        )
+
+        refresh_token = create_refresh_token(
+            {
+                "sub": user.id
+            }
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
 
     def signup(
         self,
@@ -21,7 +59,7 @@ class UserService:
         email: str,
         password: str
     ):
-        existing_user = self.repository.get_by_email(db, email)
+        existing_user = self.user_repository.get_by_email(db, email)
         if existing_user:
             raise HTTPException(status_code=409, detail="User already exists!")
 
@@ -31,7 +69,7 @@ class UserService:
             password=hash_password(password),
             role="student"
         )
-        return self.repository.create_user(db, user)
+        return self.user_repository.create_user(db, user)
     
     def login(
         self,
@@ -39,7 +77,7 @@ class UserService:
         email: str,
         password: str
     ):
-        user = self.repository.get_by_email(db, email)
+        user = self.user_repository.get_by_email(db, email)
         if not user:
             raise HTTPException(status_code=404, detail="User doesn't exist!")
         if not verify_password(password, user.password):
@@ -78,7 +116,7 @@ class UserService:
                 detail="Invalid refresh token!"
             )
         user_id = payload.get("sub")
-        user = self.repository.get_by_id(db, user_id)
+        user = self.user_repository.get_by_id(db, user_id)
 
         if not user:
             raise HTTPException(

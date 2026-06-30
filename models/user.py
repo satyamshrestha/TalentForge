@@ -7,7 +7,7 @@ class User(Base):
     __tablename__ = "users"
     id = Column(String, primary_key=True)
     email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
+    password = Column(String, nullable=True)
     role = Column(String, default="student", nullable=False)
     provider = Column(String, nullable=False, default="local")
     resumes = relationship(
