@@ -8,8 +8,9 @@ class User(Base):
     id = Column(String, primary_key=True)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=True)
-    role = Column(String, default="student", nullable=False)
     provider = Column(String, nullable=False, default="local")
+    google_id = Column(String, unique=True, nullable=True)
+    role = Column(String, default="student", nullable=False)
     resumes = relationship(
         "Resume",
         back_populates="user"
