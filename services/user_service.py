@@ -44,27 +44,7 @@ class UserService:
                 )
                 user = self.user_repository.create_user(db, user)
 
-        access_token = create_access_token(
-            {
-                "sub": str(user.id),
-                "role": user.role,
-                "scopes": ROLE_SCOPES.get(user.role, [])
-            }
-        )
-
-        refresh_token = create_refresh_token(
-            {
-                "sub": str(user.id),
-                "role": user.role,
-                "scopes": ROLE_SCOPES.get(user.role, [])
-            }
-        )
-
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
+        return self._generate_tokens(user)
 
     def signup(
         self,
@@ -99,26 +79,7 @@ class UserService:
         if not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Invalid credentials!")
         
-        access_token = create_access_token(
-            {
-                "sub": str(user.id),
-                "role": user.role,
-                "scopes": ROLE_SCOPES.get(user.role, [])
-            }
-        )
-        refresh_token = create_refresh_token(
-            {
-                "sub": str(user.id),
-                "role": user.role,
-                "scopes": ROLE_SCOPES.get(user.role, [])
-            }
-        )
-
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
+        return self._generate_tokens(user)
     
     def refresh_access_token(
         self,
@@ -149,5 +110,31 @@ class UserService:
 
         return {
             "access_token": access_token,
+            "token_type": "bearer"
+        }
+    
+    def _generate_tokens(
+        self,
+        user: User
+    ):
+        access_token = create_access_token(
+            {
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
+            }
+        )
+
+        refresh_token = create_refresh_token(
+            {
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
+            }
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer"
         }
