@@ -20,30 +20,43 @@ class UserService:
         db: Session,
         user_info: dict
     ):
+        google_id = user_info["sub"]
         email = user_info["email"]
 
-        user = self.user_repository.get_by_email(db, email)
-
-        if not user:
-            user = User(
-                id=str(uuid.uuid4()),
-                email=email,
-                password=None,
-                role="student",
-                provider="google"
-            )
-            user = self.user_repository.create_user(db, user)
+        google_user = self.user_repository.get_by_google_id(db, google_id)
+        if google_user:
+            user = google_user
+        else:
+            user = self.user_repository.get_by_email(db, email)
+            if user and user.provider == "local":
+                raise HTTPException(status_code=400, detail="An account with this email already exists. Please sign in using your email and password instead of Google.") 
+            if user and user.provider == "google":
+                if user.google_id is None:
+                    user = self.user_repository.update_google_id(db, user, google_id)
+            if not user:
+                user = User(
+                    id=str(uuid.uuid4()),
+                    email=email,
+                    password=None,
+                    provider="google",
+                    google_id=google_id,
+                    role="student",
+                )
+                user = self.user_repository.create_user(db, user)
 
         access_token = create_access_token(
             {
-                "sub": user.id,
-                "scope": user.role
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
             }
         )
 
         refresh_token = create_refresh_token(
             {
-                "sub": user.id
+                "sub": str(user.id),
+                "role": user.role,
+                "scopes": ROLE_SCOPES.get(user.role, [])
             }
         )
 
@@ -67,6 +80,7 @@ class UserService:
             id=str(uuid.uuid4()),
             email=email,
             password=hash_password(password),
+            provider="local",
             role="student"
         )
         return self.user_repository.create_user(db, user)
@@ -80,6 +94,8 @@ class UserService:
         user = self.user_repository.get_by_email(db, email)
         if not user:
             raise HTTPException(status_code=404, detail="User doesn't exist!")
+        if user.provider == "google":
+            raise HTTPException(status_code=400, detail="Please sign in with Google.")
         if not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Invalid credentials!")
         

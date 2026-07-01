@@ -10,16 +10,17 @@ class UserRepository:
         email: str
     ):
         return (db.query(User).filter(User.email == email).first())
-
-    def create_user(
+    
+    def get_by_google_id(
         self,
         db: Session,
-        user: User
+        google_id: str
     ):
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
+        return (
+            db.query(User)
+            .filter(User.google_id == google_id)
+            .first()
+        )
 
     def get_by_id(
         self,
@@ -31,3 +32,24 @@ class UserRepository:
             .filter(User.id == user_id)
             .first()
         )
+
+    def create_user(
+        self,
+        db: Session,
+        user: User
+    ):
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+    
+    def update_google_id(
+        self,
+        db: Session,
+        user: User,
+        google_id: str
+    ):
+        user.google_id = google_id
+        db.commit()
+        db.refresh(user)
+        return user
