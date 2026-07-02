@@ -1,5 +1,9 @@
+import uuid
 from fastapi.testclient import TestClient
 from app import app
+
+from models.user import User
+from tests.conftest import TestingSessionLocal
 
 client = TestClient(app)
 
@@ -119,3 +123,63 @@ def test_me_without_token():
     response = client.get("/api/v1/auth/me")
 
     assert response.status_code == 401
+
+def test_refresh_token():
+    client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "refresh@example.com",
+            "password": "password123"
+        }
+    )
+
+    login = client.post(
+        "/api/v1/auth/login",
+        data={
+            "username": "refresh@example.com",
+            "password": "password123"
+        }
+    )
+
+    refresh_token = login.json()["refresh_token"]
+
+    response = client.post(
+        "/api/v1/auth/refresh",
+        json={
+            "refresh_token": refresh_token
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_google_user_cannot_login_with_password():
+    db = TestingSessionLocal()
+
+    google_user = User(
+        id=str(uuid.uuid4()),
+        email="google@example.com",
+        password=None,
+        provider="google",
+        google_id="google123",
+        role="student"
+    )
+
+    db.add(google_user)
+    db.commit()
+    db.close()
+
+    response = client.post(
+        "/api/v1/auth/login",
+        data={
+            "username": "google@example.com",
+            "password": "password123"
+        }
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Please sign in with Google."
