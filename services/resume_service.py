@@ -5,7 +5,7 @@ from fastapi import HTTPException, UploadFile
 from db.redis import redis_client
 from models.user import User
 from models.resume import Resume
-from tasks import process_resume
+from tasks.resume_tasks import process_resume
 from repositories.resume_repository import ResumeRepository
 
 class ResumeService:

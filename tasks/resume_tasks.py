@@ -1,4 +1,4 @@
-from celery_app import celery
+from tasks.celery_app import celery
 from pypdf import PdfReader
 
 from db.database import SessionLocal
