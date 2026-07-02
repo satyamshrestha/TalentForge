@@ -1,6 +1,32 @@
 # TalentForge 🚀
 
-TalentForge is a production-style backend project built to simulate real-world backend engineering practices. The project focuses on scalable architecture, authentication, authorization, caching, asynchronous processing, containerization, and CI/CD.
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python\&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116-009688?logo=fastapi\&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql\&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?logo=sqlalchemy\&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis\&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-Background%20Tasks-37814A?logo=celery\&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker\&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions\&logoColor=white)
+
+**Production-style backend engineering project built with FastAPI**
+
+*Designed to explore scalable backend architecture, authentication, authorization, caching, asynchronous processing, containerization, CI/CD, and modern backend engineering practices.*
+
+</div>
+
+---
+
+## 📖 Overview
+
+TalentForge is a production-style backend platform developed to simulate how modern backend systems are built in industry.
+
+Rather than focusing solely on CRUD operations, the project emphasizes clean architecture, secure authentication, scalable APIs, background processing, caching strategies, containerization, and continuous integration.
+
+The long-term vision is to evolve TalentForge into an AI-powered interview preparation platform while using it as a practical playground for mastering backend engineering concepts and production-ready software development.
+
 
 ---
 
