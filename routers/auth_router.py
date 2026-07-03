@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,8 @@ async def google_login(request: Request):
     
     return await oauth.google.authorize_redirect(
         request,
-        settings.GOOGLE_REDIRECT_URI
+        settings.GOOGLE_REDIRECT_URI,
+        state=state
     )
 
 @router.get("/google/callback", include_in_schema=False)
@@ -31,6 +32,16 @@ async def google_callback(
     db: Session = Depends(get_db),
     service: UserService = Depends(get_user_service)
 ):
+    returned_state = request.query_params.get("state")
+    expected_state = request.session.get("oauth_state")
+
+    if not expected_state or returned_state != expected_state:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid OAuth state."
+        )
+
+    request.session.pop("oauth_state", None)
     token = await oauth.google.authorize_access_token(request)
     user_info = token["userinfo"]
 
@@ -46,7 +57,8 @@ async def connect_google(
     
     return await oauth.google.authorize_redirect(
         request,
-        settings.GOOGLE_CONNECT_REDIRECT_URI
+        settings.GOOGLE_REDIRECT_URI,
+        state=state
     )
 
 @router.get("/google/connect/callback", include_in_schema=False)
@@ -56,6 +68,16 @@ async def google_connect_callback(
     current_user: User = Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
+    returned_state = request.query_params.get("state")
+    saved_state = request.session.get("oauth_state")
+
+    if not saved_state or returned_state != saved_state:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid OAuth state."
+        )
+
+    request.session.pop("oauth_state", None)
     token = await oauth.google.authorize_access_token(request)
     user_info = token["userinfo"]
     
