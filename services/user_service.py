@@ -45,6 +45,37 @@ class UserService:
                 user = self.user_repository.create_user(db, user)
 
         return self._generate_tokens(user)
+    
+    def connect_google(
+        self,
+        db: Session,
+        current_user: User,
+        user_info: dict
+    ):
+        google_id = user_info["sub"]
+
+        existing_google_user = self.user_repository.get_by_google_id(db, google_id)
+
+        if existing_google_user:
+            if existing_google_user.id != current_user.id:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This Google account is already linked to another user."
+                )
+
+            return {
+                "message": "Google account already connected."
+            }
+
+        self.user_repository.update_google_id(
+            db,
+            current_user,
+            google_id
+        )
+
+        return {
+            "message": "Google account connected successfully."
+        }
 
     def signup(
         self,
