@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from auth.google_oauth import oauth
+from auth.oauth_state import generate_state
 from auth.scope_deps import require_scope
 from schemas.user_schema import UserSignup, UserResponse, TokenResponse, RefreshTokenRequest
 from auth.deps import get_current_user
@@ -16,10 +17,12 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.get("/google/login", include_in_schema=False)
 async def google_login(request: Request):
-    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    state = generate_state()
+    request.session["oauth_state"] = state
+    
     return await oauth.google.authorize_redirect(
         request,
-        redirect_uri
+        settings.GOOGLE_REDIRECT_URI
     )
 
 @router.get("/google/callback", include_in_schema=False)
@@ -29,10 +32,38 @@ async def google_callback(
     service: UserService = Depends(get_user_service)
 ):
     token = await oauth.google.authorize_access_token(request)
-
     user_info = token["userinfo"]
 
     return service.google_login(db, user_info)
+
+@router.get("/google/connect", include_in_schema=False)
+async def connect_google(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    state = generate_state()
+    request.session["oauth_state"] = state
+    
+    return await oauth.google.authorize_redirect(
+        request,
+        settings.GOOGLE_CONNECT_REDIRECT_URI
+    )
+
+@router.get("/google/connect/callback", include_in_schema=False)
+async def google_connect_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token["userinfo"]
+    
+    return service.connect_google(
+        db=db,
+        current_user=current_user,
+        user_info=user_info,
+    )
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
 def signup(
