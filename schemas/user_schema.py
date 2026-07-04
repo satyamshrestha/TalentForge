@@ -18,3 +18,13 @@ class TokenResponse(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+class ProfileResponse(BaseModel):
+    id: str
+    email: str
+    role: str
+    provider: str
+    google_connected: bool
+
+    class Config:
+        from_attributes = True

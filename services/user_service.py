@@ -144,6 +144,18 @@ class UserService:
             "token_type": "bearer"
         }
     
+    def get_profile(
+        self,
+        current_user: User,
+    ):
+        return {
+            "id": current_user.id,
+            "email": current_user.email,
+            "role": current_user.role,
+            "provider": current_user.provider,
+            "google_connected": current_user.google_id is not None,
+        }
+    
     def _generate_tokens(
         self,
         user: User
