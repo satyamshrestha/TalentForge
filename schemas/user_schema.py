@@ -21,6 +21,7 @@ class RefreshTokenRequest(BaseModel):
 
 class ProfileResponse(BaseModel):
     id: str
+    full_name: str | None
     email: str
     role: str
     provider: str
@@ -28,3 +29,6 @@ class ProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProfileUpdate(BaseModel):
+    full_name: str

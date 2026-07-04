@@ -6,6 +6,7 @@ from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
 from models.user import User
 from repositories.user_repository import UserRepository
+from schemas.user_schema import ProfileUpdate
 from auth.scopes import ROLE_SCOPES
 
 class UserService:
@@ -36,6 +37,7 @@ class UserService:
             if not user:
                 user = User(
                     id=str(uuid.uuid4()),
+                    full_name=user_info["name"],
                     email=email,
                     password=None,
                     provider="google",
@@ -89,6 +91,7 @@ class UserService:
 
         user = User(
             id=str(uuid.uuid4()),
+            full_name=None,
             email=email,
             password=hash_password(password),
             provider="local",
@@ -156,6 +159,17 @@ class UserService:
             "google_connected": current_user.google_id is not None,
         }
     
+    def update_profile(
+        self,
+        db: Session,
+        data: ProfileUpdate,
+        current_user: User
+    ):
+        current_user.full_name = data.full_name
+        db.commit()
+        db.refresh(current_user)
+        return self.get_profile(current_user)
+
     def _generate_tokens(
         self,
         user: User
