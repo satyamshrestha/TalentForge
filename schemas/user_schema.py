@@ -21,7 +21,7 @@ class RefreshTokenRequest(BaseModel):
 
 class ProfileResponse(BaseModel):
     id: str
-    full_name: str | None
+    full_name: str | None = None
     email: str
     role: str
     provider: str
