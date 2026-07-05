@@ -162,15 +162,17 @@ class UserService:
     
     def update_profile(
         self,
+        db: Session,
         data: ProfileUpdate,
         current_user: User
     ):
         current_user.full_name = data.full_name
-        self.user_repository.commit_and_refresh(current_user)
+        self.user_repository.commit_and_refresh(db, current_user)
         return self.get_profile(current_user)
     
     def change_password(
         self,
+        db: Session,
         current_user: User,
         data: PasswordChangeRequest,
     ):
@@ -184,7 +186,7 @@ class UserService:
             raise HTTPException(status_code=400, detail="New password must be different from the current password.")
         
         current_user.password = hash_password(data.new_password)
-        self.user_repository.commit_and_refresh(current_user)
+        self.user_repository.commit_and_refresh(db, current_user)
         return {"message": "Password updated successfully."}
 
     def _generate_tokens(
