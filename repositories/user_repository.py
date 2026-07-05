@@ -53,3 +53,11 @@ class UserRepository:
         db.commit()
         db.refresh(user)
         return user
+    
+    def commit_and_refresh(
+        self,
+        db: Session,
+        user: User
+    ):
+        db.commit()
+        db.refresh(user)

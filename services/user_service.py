@@ -6,7 +6,7 @@ from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
 from models.user import User
 from repositories.user_repository import UserRepository
-from schemas.user_schema import ProfileUpdate
+from schemas.user_schema import ProfileUpdate, PasswordChangeRequest
 from auth.scopes import ROLE_SCOPES
 
 class UserService:
@@ -162,14 +162,30 @@ class UserService:
     
     def update_profile(
         self,
-        db: Session,
         data: ProfileUpdate,
         current_user: User
     ):
         current_user.full_name = data.full_name
-        db.commit()
-        db.refresh(current_user)
+        self.user_repository.commit_and_refresh(current_user)
         return self.get_profile(current_user)
+    
+    def change_password(
+        self,
+        current_user: User,
+        data: PasswordChangeRequest,
+    ):
+        if current_user.provider == "google":
+            raise HTTPException(status_code=400, detail="Google accounts cannot change passwords.")
+        
+        if not verify_password(data.current_password, current_user.password):
+            raise HTTPException(status_code=401, detail="Current password is incorrect.")
+        
+        if verify_password(data.new_password, current_user.password):
+            raise HTTPException(status_code=400, detail="New password must be different from the current password.")
+        
+        current_user.password = hash_password(data.new_password)
+        self.user_repository.commit_and_refresh(current_user)
+        return {"message": "Password updated successfully."}
 
     def _generate_tokens(
         self,

@@ -32,3 +32,7 @@ class ProfileResponse(BaseModel):
 
 class ProfileUpdate(BaseModel):
     full_name: str
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
