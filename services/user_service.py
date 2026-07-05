@@ -4,6 +4,13 @@ from fastapi import HTTPException
 
 from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
+from exceptions.app_exception import (
+    UserNotFoundException,
+    UserAlreadyExistsException,
+    InvalidCredentialsException,
+    GoogleAccountException,
+    InvalidRefreshTokenException,
+)
 from models.user import User
 from repositories.user_repository import UserRepository
 from schemas.user_schema import ProfileUpdate, PasswordChangeRequest
@@ -107,7 +114,7 @@ class UserService:
     ):
         user = self.user_repository.get_by_email(db, email)
         if not user:
-            raise HTTPException(status_code=404, detail="User doesn't exist!")
+            raise UserNotFoundException()
         if user.provider == "google":
             raise HTTPException(status_code=400, detail="Please sign in with Google.")
         if not verify_password(password, user.password):
