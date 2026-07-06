@@ -1,15 +1,19 @@
 import uuid
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
 
 from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import create_access_token, create_refresh_token, verify_refresh_token
-from exceptions.app_exception import (
-    UserNotFoundException,
+from exceptions.user_exception import (
     UserAlreadyExistsException,
+    UserNotFoundException,
     InvalidCredentialsException,
     GoogleAccountException,
     InvalidRefreshTokenException,
+    GoogleAlreadyLinkedException,
+    LocalAccountExistsException,
+    PasswordChangeNotAllowedException,
+    CurrentPasswordIncorrectException,
+    PasswordReuseException
 )
 from models.user import User
 from repositories.user_repository import UserRepository
@@ -37,7 +41,7 @@ class UserService:
         else:
             user = self.user_repository.get_by_email(db, email)
             if user and user.provider == "local":
-                raise HTTPException(status_code=400, detail="An account with this email already exists. Please sign in using your email and password instead of Google.") 
+                raise LocalAccountExistsException()
             if user and user.provider == "google":
                 if user.google_id is None:
                     user = self.user_repository.update_google_id(db, user, google_id)
@@ -67,10 +71,7 @@ class UserService:
 
         if existing_google_user:
             if existing_google_user.id != current_user.id:
-                raise HTTPException(
-                    status_code=409,
-                    detail="This Google account is already linked to another user."
-                )
+                raise GoogleAlreadyLinkedException()
 
             return {
                 "message": "Google account already connected."
@@ -94,7 +95,7 @@ class UserService:
     ):
         existing_user = self.user_repository.get_by_email(db, email)
         if existing_user:
-            raise HTTPException(status_code=409, detail="User already exists!")
+            raise UserAlreadyExistsException()
 
         user = User(
             id=str(uuid.uuid4()),
@@ -116,9 +117,9 @@ class UserService:
         if not user:
             raise UserNotFoundException()
         if user.provider == "google":
-            raise HTTPException(status_code=400, detail="Please sign in with Google.")
+            raise GoogleAccountException()
         if not verify_password(password, user.password):
-            raise HTTPException(status_code=401, detail="Invalid credentials!")
+            raise InvalidCredentialsException()
         
         return self._generate_tokens(user)
     
@@ -129,18 +130,12 @@ class UserService:
     ):
         payload = verify_refresh_token(refresh_token)
         if payload is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid refresh token!"
-            )
+            raise InvalidRefreshTokenException()
         user_id = payload.get("sub")
         user = self.user_repository.get_by_id(db, user_id)
 
         if not user:
-            raise HTTPException(
-                status_code=401,
-                detail="User not found!"
-            )
+            raise UserNotFoundException()
         access_token = create_access_token(
             {
                 "sub": str(user.id),
@@ -184,14 +179,13 @@ class UserService:
         data: PasswordChangeRequest,
     ):
         if current_user.provider == "google":
-            raise HTTPException(status_code=400, detail="Google accounts cannot change passwords.")
+            raise PasswordChangeNotAllowedException()
         
         if not verify_password(data.current_password, current_user.password):
-            raise HTTPException(status_code=401, detail="Current password is incorrect.")
+            raise CurrentPasswordIncorrectException()
         
         if verify_password(data.new_password, current_user.password):
-            raise HTTPException(status_code=400, detail="New password must be different from the current password.")
-        
+            raise PasswordReuseException()
         current_user.password = hash_password(data.new_password)
         self.user_repository.commit_and_refresh(db, current_user)
         return {"message": "Password updated successfully."}

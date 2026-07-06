@@ -1,10 +1,15 @@
 import json, uuid, os
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
 from db.redis import redis_client
 from models.user import User
 from models.resume import Resume
+from exceptions.resume_exception import (
+    InvalidResumeFileException,
+    ResumeAccessDeniedException,
+    ResumeNotFoundException
+)
 from tasks.resume_tasks import process_resume
 from repositories.resume_repository import ResumeRepository
 
@@ -22,7 +27,7 @@ class ResumeService:
         file: UploadFile
     ):
         if file.content_type != "application/pdf":
-            raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+            raise InvalidResumeFileException()
         file_name = f"{str(uuid.uuid4())}_{file.filename}"
         file_path = os.path.join(
             "uploads",
@@ -105,9 +110,9 @@ class ResumeService:
     ):
         resume = self.repository.get_resume_by_id(db, id)
         if not resume:
-            raise HTTPException(status_code=404, detail="Resume does not exist!")
+            raise ResumeNotFoundException()
         if resume.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Resume does not belong to the current user!")
+            raise ResumeAccessDeniedException()
         return resume
 
     def _get_resume_cache_key(
