@@ -1,8 +1,16 @@
 import math
 import uuid
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
 
+from exceptions.interview_exception import (
+    InterviewAccessDeniedException,
+    InterviewNotFoundException,
+    ResumeSkillsNotFoundException
+)
+from exceptions.resume_exception import (
+    ResumeNotFoundException,
+    ResumeAccessDeniedException,
+)
 from models.user import User
 from models.interview import Interview
 from models.question import Question
@@ -36,14 +44,14 @@ class InterviewService:
     ):
         resume = self.resume_repository.get_resume_by_id(db, resume_id)
         if not resume:
-            raise HTTPException(status_code=404, detail="Resume not found!")
+            raise ResumeNotFoundException()
         if resume.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Resume doesn't belong to the current user.")
+            raise ResumeAccessDeniedException()
         
         analysis = (resume.parsed_text or {}).get("analysis", {})
         skills = analysis.get("backend_skills", [])
         if not skills:
-            raise HTTPException(status_code=400, detail="No backend skills found in resume.")
+            raise ResumeSkillsNotFoundException()
         questions = self.question_generator.generate(skills)
 
         interview = Interview(
@@ -245,7 +253,7 @@ class InterviewService:
     ):
         interview = self.interview_repository.get_interview_by_id(db, interview_id)
         if not interview:
-            raise HTTPException(status_code=404, detail="Interview not found!")
+            raise InterviewNotFoundException()
         if interview.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Access Denied!")
+            raise InterviewAccessDeniedException()
         return interview
