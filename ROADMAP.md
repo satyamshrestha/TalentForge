@@ -6,6 +6,7 @@ RBAC ✅
 
 Phase 2
 Interview CRUD ✅
+Resume CRUD ✅️
 Question CRUD ✅
 
 Phase 3
