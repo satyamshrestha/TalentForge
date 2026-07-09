@@ -13,7 +13,7 @@ services:
 
   celery_worker:
     image: satyamshrestha/talentforge:latest
-    command: celery -A celery_app.celery worker --loglevel=info
+    command: celery -A tasks.celery_app.celery worker --loglevel=info
     depends_on:
       - db
       - redis
