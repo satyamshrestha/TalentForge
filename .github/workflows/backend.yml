@@ -36,6 +36,7 @@ jobs:
           SECRET_KEY: test_secret
           ALGORITHM: HS256
           DATABASE_URL: sqlite:///./test.db
+          REDIS_URL: redis://localhost:6379/0
         run: |
           pytest
   
