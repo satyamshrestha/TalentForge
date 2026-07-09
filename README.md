@@ -48,6 +48,46 @@ The long-term vision is to evolve TalentForge into an AI-powered interview prepa
 
 ---
 
+## 📁 Project Structure
+
+```text
+.
+├── .github/
+│   └── workflows/          # GitHub Actions CI/CD
+├── alembic/                # Database migrations
+├── api/
+│   └── v1/                 # API version 1 endpoints
+├── auth/                   # Authentication & authorization
+├── db/                     # Database configuration
+├── exceptions/             # Custom exception handlers
+├── middleware/             # FastAPI middleware
+├── models/                 # SQLAlchemy models
+├── repositories/           # Data access layer
+├── routers/                # API route definitions
+├── schemas/                # Pydantic schemas
+├── services/               # Business logic
+├── tasks/                  # Background tasks
+├── tests/                  # Unit & integration tests
+├── uploads/
+│   └── resumes/            # Uploaded resume files
+├── utils/                  # Utility functions
+├── .github/
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── Dockerfile
+├── README.md
+├── ROADMAP.md
+├── alembic.ini
+├── app.py                  # Application entry point
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── requirements.txt
+└── test.db
+```
+
+---
+
 # Project Architecture
 
 ```text
