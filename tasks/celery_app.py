@@ -1,7 +1,10 @@
 from celery import Celery
+
+from utils.config import settings
+
 celery = Celery(
     "TalentForge",
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/0",
+    broker=settings.REDIS_URL,
+    backend=settings.REDIS_URL,
     include=["tasks.resume_tasks"]
 )

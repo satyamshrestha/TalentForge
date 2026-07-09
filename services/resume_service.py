@@ -12,6 +12,7 @@ from exceptions.resume_exception import (
 )
 from tasks.resume_tasks import process_resume
 from repositories.resume_repository import ResumeRepository
+from utils.config import settings
 
 class ResumeService:
     def __init__(
@@ -30,8 +31,7 @@ class ResumeService:
             raise InvalidResumeFileException()
         file_name = f"{str(uuid.uuid4())}_{file.filename}"
         file_path = os.path.join(
-            "uploads",
-            "resumes",
+            settings.UPLOAD_DIR,
             file_name
         )
         os.makedirs(
