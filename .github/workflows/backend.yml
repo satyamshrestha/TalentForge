@@ -33,11 +33,11 @@ jobs:
 
       - name: Run Tests
         env:
+          TESTING: True
           SECRET_KEY: test_secret
           ALGORITHM: HS256
           DATABASE_URL: sqlite:///./test.db
           REDIS_URL: redis://localhost:6379/0
-          TESTING: True
         run: |
           pytest
   

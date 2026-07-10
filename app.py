@@ -36,11 +36,7 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=[
-        "localhost",
-        "127.0.0.1",
-        "*.localhost",
-    ]
+    allowed_hosts=settings.ALLOWED_HOSTS
 )
 
 app.add_middleware(SecurityHeadersMiddleware)

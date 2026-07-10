@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
     TESTING: bool = False
+    ALLOWED_HOSTS: list[str] = [
+        "localhost",
+        "127.0.0.1",
+        "*.localhost",
+        "testserver",
+    ]
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
