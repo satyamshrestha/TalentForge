@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # File Uploads
     UPLOAD_DIR: str = "uploads/resumes"
+    MAX_RESUME_SIZE: int = 5 * 1024 * 1024
 
     # Future AI Configuration
     OPENAI_API_KEY: str = ""

@@ -8,11 +8,14 @@ from models.resume import Resume
 from exceptions.resume_exception import (
     InvalidResumeFileException,
     ResumeAccessDeniedException,
-    ResumeNotFoundException
+    ResumeNotFoundException,
+    ResumeTooLargeException,
+    InvalidResumeContentException
 )
 from tasks.resume_tasks import process_resume
 from repositories.resume_repository import ResumeRepository
 from utils.config import settings
+from utils.file_validation import is_pdf
 
 class ResumeService:
     def __init__(
@@ -27,8 +30,20 @@ class ResumeService:
         current_user: User,
         file: UploadFile
     ):
+        content = file.file.read()
+
+        if len(content) > settings.MAX_RESUME_SIZE:
+            raise ResumeTooLargeException()
+
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise InvalidResumeFileException()
+
+        if not is_pdf(content):
+            raise InvalidResumeContentException()
+        
         if file.content_type != "application/pdf":
             raise InvalidResumeFileException()
+        
         file_name = f"{str(uuid.uuid4())}_{file.filename}"
         file_path = os.path.join(
             settings.UPLOAD_DIR,
@@ -39,7 +54,8 @@ class ResumeService:
             exist_ok=True
         )
         with open(file_path, "wb") as buffer:
-            buffer.write(file.file.read())
+            buffer.write(content)
+
         resume = Resume(
             id=str(uuid.uuid4()),
             file_path=file_path,
