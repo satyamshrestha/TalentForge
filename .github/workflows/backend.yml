@@ -37,6 +37,7 @@ jobs:
           ALGORITHM: HS256
           DATABASE_URL: sqlite:///./test.db
           REDIS_URL: redis://localhost:6379/0
+          TESTING: True
         run: |
           pytest
   

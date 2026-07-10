@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     DATABASE_URL: str
     REDIS_URL: str
+    TESTING: bool = False
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
