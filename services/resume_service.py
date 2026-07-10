@@ -23,7 +23,7 @@ class ResumeService:
         repository: ResumeRepository
     ):
         self.repository = repository
-
+    
     def upload_resume(
         self,
         db: Session,
@@ -38,13 +38,13 @@ class ResumeService:
         if not file.filename or not file.filename.lower().endswith(".pdf"):
             raise InvalidResumeFileException()
 
-        if not is_pdf(content):
-            raise InvalidResumeContentException()
-        
         if file.content_type != "application/pdf":
             raise InvalidResumeFileException()
-        
-        file_name = f"{str(uuid.uuid4())}_{file.filename}"
+
+        if not is_pdf(content):
+            raise InvalidResumeContentException()
+
+        file_name = f"{uuid.uuid4()}_{file.filename}"
         file_path = os.path.join(
             settings.UPLOAD_DIR,
             file_name
@@ -62,6 +62,7 @@ class ResumeService:
             status="PENDING",
             user_id=current_user.id
         )
+
         resume = self.repository.create_resume(db, resume)
         cache_key = self._get_resume_cache_key(current_user.id)
         redis_client.delete(cache_key)
