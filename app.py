@@ -7,9 +7,13 @@ import utils.logger
 from api.v1.api import api_router
 from exceptions.app_exception import AppException
 from middleware.logging_middleware import LoggingMiddleware
+from middleware.rate_limit import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 from utils.config import settings
 
 app = FastAPI()
+app.state.limiter = limiter
 
 app.add_middleware(
     SessionMiddleware,
@@ -17,6 +21,11 @@ app.add_middleware(
 )
 
 app.add_middleware(LoggingMiddleware)
+
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler
+)
 
 app.include_router(api_router, prefix="/api/v1")
 

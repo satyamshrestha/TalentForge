@@ -8,6 +8,7 @@ from auth.scope_deps import require_scope
 from schemas.user_schema import UserSignup, UserResponse, TokenResponse, RefreshTokenRequest
 from auth.deps import get_current_user
 from db.deps import get_db
+from middleware.rate_limit import limiter
 from models.user import User
 from services.deps import get_user_service
 from services.user_service import UserService
@@ -16,6 +17,7 @@ from utils.config import settings
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.get("/google/login", include_in_schema=False)
+@limiter.limit("10/minute")
 async def google_login(request: Request):
     state = generate_state()
     request.session["oauth_state"] = state
@@ -48,6 +50,7 @@ async def google_callback(
     return service.google_login(db, user_info)
 
 @router.get("/google/connect", include_in_schema=False)
+@limiter.limit("10/minute")
 async def connect_google(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -88,7 +91,9 @@ async def google_connect_callback(
     )
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
+@limiter.limit("5/minute")
 def signup(
+    request: Request,
     data: UserSignup,
     db: Session = Depends(get_db),
     service: UserService = Depends(get_user_service)
@@ -100,7 +105,9 @@ def signup(
     )
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
     service: UserService = Depends(get_user_service)
@@ -122,7 +129,9 @@ def get_me(
     }
 
 @router.post("/refresh")
+@limiter.limit("20/minute")
 def refresh_token(
+    request: Request,
     data: RefreshTokenRequest,
     db: Session = Depends(get_db),
     service: UserService = Depends(get_user_service)
