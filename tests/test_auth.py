@@ -113,12 +113,9 @@ def test_me_endpoint():
             "Authorization": f"Bearer {token}"
         }
     )
-    print(response.status_code)
-    print(response.json())
-
-    # assert response.status_code == 200
-    # assert response.json()["Email"] == "me@example.com"
-    # assert response.json()["Role"] == "student"
+    assert response.status_code == 200
+    assert response.json()["Email"] == "me@example.com"
+    assert response.json()["Role"] == "student"
 
 
 def test_me_without_token():
