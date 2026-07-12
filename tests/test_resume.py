@@ -98,3 +98,32 @@ def test_upload_invalid_resume(
 
     mock_delay.assert_not_called()
     mock_redis_delete.assert_not_called()
+
+def test_get_resume_not_found():
+    client.post(
+        "/api/v1/auth/signup",
+        json={
+            "email": "resume404@example.com",
+            "password": "password123"
+        }
+    )
+
+    login = client.post(
+        "/api/v1/auth/login",
+        data={
+            "username": "resume404@example.com",
+            "password": "password123"
+        }
+    )
+
+    token = login.json()["access_token"]
+
+    response = client.get(
+        "/api/v1/resumes/non-existent-id",
+        headers={
+            "Authorization": f"Bearer {token}"
+        }
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Resume does not exist!"
