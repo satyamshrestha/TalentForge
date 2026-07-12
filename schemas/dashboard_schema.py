@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class RecentInterviewResponse(BaseModel):
     id: str
@@ -7,8 +7,9 @@ class RecentInterviewResponse(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
+    model_config = ConfigDict(
         from_attributes=True
+    )
 
 class DashboardResponse(BaseModel):
     total_resumes: int

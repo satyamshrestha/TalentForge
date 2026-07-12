@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 class UserSignup(BaseModel):
     email: EmailStr
@@ -8,8 +8,9 @@ class UserResponse(BaseModel):
     id: str
     email: EmailStr
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -27,8 +28,9 @@ class ProfileResponse(BaseModel):
     provider: str
     google_connected: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 class ProfileUpdate(BaseModel):
     full_name: str

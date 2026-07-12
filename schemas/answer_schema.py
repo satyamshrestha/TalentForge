@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class AnswerCreate(BaseModel):
@@ -11,5 +11,6 @@ class AnswerResponse(BaseModel):
     feedback: str
     score: str
 
-    class Config:
+    model_config = ConfigDict(
         from_attributes=True
+    )

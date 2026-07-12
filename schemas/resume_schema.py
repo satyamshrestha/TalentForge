@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class ResumeResponse(BaseModel):
     id: str
@@ -8,5 +8,6 @@ class ResumeResponse(BaseModel):
     error_message: str | None
     user_id: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
