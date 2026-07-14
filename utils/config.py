@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GOOGLE_AI_API_KEY: str = ""
 
-    LLM_PROVIDER: str = "openai"
-    LLM_MODEL: str = "gpt-5"
+    LLM_PROVIDER: str = "ollama"
+    LLM_MODEL: str = "llama3.1:8b"
     MAX_TOKENS: int = 1000
     TEMPERATURE: float = 0.2
 
