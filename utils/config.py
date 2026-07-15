@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     GOOGLE_AI_API_KEY: str = ""
 
     LLM_PROVIDER: str = "ollama"
-    LLM_MODEL: str = "llama3.1:8b"
+    LLM_MODEL: str = "qwen3:4b"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
     MAX_TOKENS: int = 1000
     TEMPERATURE: float = 0.2
 
