@@ -5,6 +5,7 @@ from utils.config import settings
 
 
 class OllamaProvider(LLMProvider):
+    """LLM provider implementation using Ollama."""
     def generate(self, prompt: str) -> str:
         response = requests.post(
             f"{settings.OLLAMA_BASE_URL}/api/generate",
