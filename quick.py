@@ -1,9 +1,12 @@
-from ai.services.chat_service import ChatService
+from ai.services.resume_analyzer import ResumeAnalyzer
 
-service = ChatService()
+analyzer = ResumeAnalyzer()
 
-print(
-    service.chat(
-        "Explain FastAPI in one paragraph."
-    )
-)
+resume = """
+John Doe
+Python Developer
+Skills: Python, FastAPI, PostgreSQL, Docker
+Experience: Built REST APIs and deployed applications.
+"""
+
+print(analyzer.analyze(resume))
