@@ -1,5 +1,6 @@
 from ai.services.resume_analyzer import ResumeAnalyzer
 from ai.services.question_generator import QuestionGenerator
+from ai.services.answer_evaluator import AnswerEvaluator
 
 
 # analyzer = ResumeAnalyzer()
@@ -13,10 +14,19 @@ from ai.services.question_generator import QuestionGenerator
 
 # print(analyzer.analyze(resume))
 
-generator = QuestionGenerator()
+# generator = QuestionGenerator()
+
+# print(
+#     generator.generate(
+#         "Python, FastAPI, PostgreSQL, Docker"
+#     )
+# )
+
+evaluator = AnswerEvaluator()
 
 print(
-    generator.generate(
-        "Python, FastAPI, PostgreSQL, Docker"
+    evaluator.evaluate(
+        "What is FastAPI?",
+        "FastAPI is a Python web framework."
     )
 )
