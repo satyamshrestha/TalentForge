@@ -9,12 +9,16 @@ class ResumeAnalyzer:
         prompt = f"""
 You are an expert technical recruiter.
 
-Analyze the following resume and provide:
+Analyze the resume below.
 
-1. A brief summary of the candidate.
-2. Key technical skills.
-3. Strengths.
-4. Areas for improvement.
+Return ONLY these sections:
+
+## Summary
+## Technical Skills
+## Strengths
+## Areas for Improvement
+
+Keep the response concise (maximum 200 words).
 
 Resume:
 {resume_text}
