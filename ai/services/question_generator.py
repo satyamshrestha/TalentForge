@@ -1,4 +1,5 @@
 from ai.provider_factory import get_provider
+from ai.prompts import QUESTION_GENERATION_PROMPT
 
 
 class QuestionGenerator:
@@ -6,18 +7,5 @@ class QuestionGenerator:
         self.provider = get_provider()
 
     def generate(self, resume_text: str) -> str:
-        prompt = f"""
-You are a senior technical interviewer.
-
-Based on the following resume, generate exactly 5 interview questions.
-
-Requirements:
-- Questions should match the candidate's skills.
-- Include a mix of theory and practical questions.
-- Return only the numbered questions.
-
-Resume:
-{resume_text}
-"""
-
+        prompt = QUESTION_GENERATION_PROMPT.format(resume=resume_text)
         return self.provider.generate(prompt)

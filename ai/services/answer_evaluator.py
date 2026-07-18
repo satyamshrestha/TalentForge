@@ -1,4 +1,5 @@
 from ai.provider_factory import get_provider
+from ai.prompts import ANSWER_EVALUATION_PROMPT
 
 
 class AnswerEvaluator:
@@ -10,22 +11,9 @@ class AnswerEvaluator:
         question: str,
         answer: str,
     ) -> str:
-        prompt = f"""
-You are an expert technical interviewer.
-
-Question:
-{question}
-
-Candidate Answer:
-{answer}
-
-Provide:
-
-## Score (1-10)
-## Feedback
-## Suggested Improvement
-
-Keep the response concise.
-"""
+        prompt = ANSWER_EVALUATION_PROMPT.format(
+            question=question,
+            answer=answer,
+        )
 
         return self.provider.generate(prompt)
