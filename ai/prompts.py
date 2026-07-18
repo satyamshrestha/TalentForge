@@ -17,6 +17,7 @@ Resume:
 {resume}
 """
 
+
 QUESTION_GENERATION_PROMPT = """
 You are a senior technical interviewer.
 
@@ -31,6 +32,7 @@ Resume:
 
 {resume}
 """
+
 
 ANSWER_EVALUATION_PROMPT = """
 You are an expert technical interviewer.
