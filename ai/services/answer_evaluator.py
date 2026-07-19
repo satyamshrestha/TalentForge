@@ -1,5 +1,8 @@
+import json
+
 from ai.provider_factory import get_provider
 from ai.prompts import ANSWER_EVALUATION_PROMPT
+from ai.schemas import AnswerEvaluationResponse
 
 
 class AnswerEvaluator:
@@ -16,4 +19,13 @@ class AnswerEvaluator:
             answer=answer,
         )
 
-        return self.provider.generate(prompt)
+        response = self.provider.generate(prompt)
+
+        print("=" * 80)
+        print(response)
+        print("=" * 80)
+
+
+        data = json.loads(response)
+
+        return AnswerEvaluationResponse(**data)

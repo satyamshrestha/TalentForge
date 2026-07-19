@@ -11,7 +11,7 @@ Do not wrap the JSON in ```.
 
 The JSON must follow exactly this structure:
 
-{
+{{
     "summary": "...",
     "technical_skills": [
         "..."
@@ -22,7 +22,7 @@ The JSON must follow exactly this structure:
     "areas_for_improvement": [
         "..."
     ]
-}
+}}
 
 Resume:
 
@@ -37,7 +37,7 @@ Based on the resume below, generate exactly 5 interview questions.
 
 Return ONLY valid JSON.
 
-{
+{{
     "questions": [
         "...",
         "...",
@@ -45,7 +45,7 @@ Return ONLY valid JSON.
         "...",
         "..."
     ]
-}
+}}
 
 Resume:
 
@@ -60,11 +60,11 @@ Evaluate the candidate's answer.
 
 Return ONLY valid JSON.
 
-{
+{{
     "score": 8,
     "feedback": "...",
     "suggested_improvement": "..."
-}
+}}
 
 Question:
 

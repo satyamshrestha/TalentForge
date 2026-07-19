@@ -1,5 +1,8 @@
+import json
+
 from ai.provider_factory import get_provider
 from ai.prompts import QUESTION_GENERATION_PROMPT
+from ai.schemas import QuestionGenerationResponse
 
 
 class QuestionGenerator:
@@ -8,4 +11,8 @@ class QuestionGenerator:
 
     def generate(self, resume_text: str) -> str:
         prompt = QUESTION_GENERATION_PROMPT.format(resume=resume_text)
-        return self.provider.generate(prompt)
+        response = self.provider.generate(prompt)
+
+        data = json.loads(response)
+
+        return QuestionGenerationResponse(**data)
