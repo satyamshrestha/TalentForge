@@ -3,24 +3,24 @@ from ai.services.question_generator import QuestionGenerator
 from ai.services.answer_evaluator import AnswerEvaluator
 
 
-# analyzer = ResumeAnalyzer()
+analyzer = ResumeAnalyzer()
 
-# resume = """
-# John Doe
-# Python Developer
-# Skills: Python, FastAPI, PostgreSQL, Docker
-# Experience: Built REST APIs and deployed applications.
-# """
+resume = """
+John Doe
+Python Developer
+Skills: Python, FastAPI, PostgreSQL, Docker
+Experience: Built REST APIs and deployed applications.
+"""
 
-# print(analyzer.analyze(resume))
+print(analyzer.analyze(resume))
 
-# generator = QuestionGenerator()
+generator = QuestionGenerator()
 
-# print(
-#     generator.generate(
-#         "Python, FastAPI, PostgreSQL, Docker"
-#     )
-# )
+print(
+    generator.generate(
+        "Python, FastAPI, PostgreSQL, Docker"
+    )
+)
 
 evaluator = AnswerEvaluator()
 

@@ -3,6 +3,7 @@ import json
 from ai.provider_factory import get_provider
 from ai.prompts import ANSWER_EVALUATION_PROMPT
 from ai.schemas import AnswerEvaluationResponse
+from exceptions.ai_exception import AIResponseFormatException
 
 
 class AnswerEvaluator:
@@ -25,7 +26,9 @@ class AnswerEvaluator:
         print(response)
         print("=" * 80)
 
-
-        data = json.loads(response)
+        try:
+            data = json.loads(response)
+        except json.JSONDecodeError:
+            raise AIResponseFormatException()
 
         return AnswerEvaluationResponse(**data)
