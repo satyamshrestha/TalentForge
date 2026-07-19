@@ -3,14 +3,26 @@ You are an expert technical recruiter.
 
 Analyze the resume below.
 
-Return ONLY these sections:
+Return ONLY valid JSON.
 
-## Summary
-## Technical Skills
-## Strengths
-## Areas for Improvement
+Do not include markdown.
+Do not include explanations.
+Do not wrap the JSON in ```.
 
-Keep the response concise (maximum 200 words).
+The JSON must follow exactly this structure:
+
+{
+    "summary": "...",
+    "technical_skills": [
+        "..."
+    ],
+    "strengths": [
+        "..."
+    ],
+    "areas_for_improvement": [
+        "..."
+    ]
+}
 
 Resume:
 
@@ -21,12 +33,19 @@ Resume:
 QUESTION_GENERATION_PROMPT = """
 You are a senior technical interviewer.
 
-Based on the following resume, generate exactly 5 interview questions.
+Based on the resume below, generate exactly 5 interview questions.
 
-Requirements:
-- Match the candidate's skills.
-- Mix theory and practical questions.
-- Return only numbered questions.
+Return ONLY valid JSON.
+
+{
+    "questions": [
+        "...",
+        "...",
+        "...",
+        "...",
+        "..."
+    ]
+}
 
 Resume:
 
@@ -37,6 +56,16 @@ Resume:
 ANSWER_EVALUATION_PROMPT = """
 You are an expert technical interviewer.
 
+Evaluate the candidate's answer.
+
+Return ONLY valid JSON.
+
+{
+    "score": 8,
+    "feedback": "...",
+    "suggested_improvement": "..."
+}
+
 Question:
 
 {question}
@@ -44,12 +73,4 @@ Question:
 Candidate Answer:
 
 {answer}
-
-Provide:
-
-## Score (1-10)
-## Feedback
-## Suggested Improvement
-
-Keep the response concise.
 """
