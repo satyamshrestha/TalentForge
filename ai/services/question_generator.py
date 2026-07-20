@@ -1,9 +1,7 @@
-import json
-
 from ai.provider_factory import get_provider
 from ai.prompts import QUESTION_GENERATION_PROMPT
 from ai.schemas import QuestionGenerationResponse
-from exceptions.ai_exception import AIResponseFormatException
+from ai.utils.parser import parse_ai_response
 
 
 
@@ -15,9 +13,7 @@ class QuestionGenerator:
         prompt = QUESTION_GENERATION_PROMPT.format(resume=resume_text)
         response = self.provider.generate(prompt)
 
-        try:
-            data = json.loads(response)
-        except json.JSONDecodeError:
-            raise AIResponseFormatException()
-
-        return QuestionGenerationResponse(**data)
+        return parse_ai_response(
+            response,
+            QuestionGenerationResponse
+        )
