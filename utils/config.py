@@ -29,10 +29,12 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GOOGLE_AI_API_KEY: str = ""
 
+    # AI Configuration
     LLM_PROVIDER: str = "ollama"
     LLM_MODEL: str = "llama3.2:3b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_TIMEOUT: int = 300
+    OLLAMA_RETRIES: int = 2
     MAX_TOKENS: int = 1000
     TEMPERATURE: float = 0.2
 
