@@ -15,6 +15,7 @@ class OllamaProvider(LLMProvider):
                     "model": settings.LLM_MODEL,
                     "prompt": prompt,
                     "stream": False,
+                    "format": "json"
                 },
                 timeout=settings.OLLAMA_TIMEOUT,
             )
