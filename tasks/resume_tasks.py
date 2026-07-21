@@ -4,7 +4,7 @@ from pypdf import PdfReader
 from db.database import SessionLocal
 from models.resume import Resume
 from services.resume_parser import ResumeParser
-from services.resume_analyzer import ResumeAnalyzer
+from ai.services.resume_analyzer import ResumeAnalyzer
 
 @celery.task
 def process_resume(id: str):
@@ -29,16 +29,16 @@ def process_resume(id: str):
 
         reader = PdfReader(resume.file_path)
 
-        text = ""
-
-        for page in reader.pages:
-            text += (page.extract_text() or "") + "\n"
+        text = "\n".join(
+            page.extract_text() or ""
+            for page in reader.pages
+        )
             
         parsed_data = parser.parse(text)
-        analysis = analyzer.analyze(parsed_data)
+        analysis = analyzer.analyze(text)
 
         parsed_data["pages"] = len(reader.pages)
-        parsed_data["analysis"] = analysis
+        parsed_data["analysis"] = analysis.model_dump()
 
         resume.parsed_text = parsed_data
         resume.status = "COMPLETED"
