@@ -38,7 +38,7 @@ def process_resume(id: str):
         analysis = analyzer.analyze(text)
 
         parsed_data["pages"] = len(reader.pages)
-        parsed_data["analysis"] = analysis.model_dump()
+        parsed_data["ai_analysis"] = analysis.model_dump()
 
         resume.parsed_text = parsed_data
         resume.status = "COMPLETED"
@@ -49,7 +49,7 @@ def process_resume(id: str):
     except Exception as e:
         if resume:
             resume.status = "FAILED"
-            resume.error_message = str(e)
+            resume.error_message = repr(e)
             db.commit()
 
     finally:
