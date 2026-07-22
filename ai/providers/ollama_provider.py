@@ -26,11 +26,8 @@ class OllamaProvider(LLMProvider):
                     },
                     timeout=settings.OLLAMA_TIMEOUT,
                 )
-
                 response.raise_for_status()
-
                 data = response.json()
-
                 return data["response"]
 
             except requests.RequestException as e:
