@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from exceptions.interview_exception import (
     InterviewAccessDeniedException,
     InterviewNotFoundException,
-    ResumeSkillsNotFoundException
+    ResumeTextNotFoundException
 )
 from exceptions.resume_exception import (
     ResumeNotFoundException,
@@ -48,11 +48,13 @@ class InterviewService:
         if resume.user_id != current_user.id:
             raise ResumeAccessDeniedException()
         
-        analysis = (resume.parsed_text or {}).get("analysis", {})
-        skills = analysis.get("backend_skills", [])
-        if not skills:
-            raise ResumeSkillsNotFoundException()
-        questions = self.question_generator.generate(skills)
+        parsed_resume = resume.parsed_text or {}
+        resume_text = parsed_resume.get("raw_text")
+
+        if not resume_text:
+            raise ResumeTextNotFoundException()
+
+        questions = self.question_generator.generate(resume_text)
 
         interview = Interview(
             id=str(uuid.uuid4()),

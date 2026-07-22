@@ -14,9 +14,9 @@ class InterviewAccessDeniedException(AppException):
             detail="Access denied!"
         )
 
-class ResumeSkillsNotFoundException(AppException):
+class ResumeTextNotFoundException(AppException):
     def __init__(self):
         super().__init__(
             status_code=400,
-            detail="No backend skills found in resume."
+            detail="No text found in resume."
         )
