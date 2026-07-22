@@ -5,9 +5,13 @@ from db.database import SessionLocal
 from models.resume import Resume
 from services.resume_parser import ResumeParser
 from ai.services.resume_analyzer import ResumeAnalyzer
+from exceptions.ai_exception import AIProviderException
 
-@celery.task
-def process_resume(id: str):
+@celery.task(
+    bind=True,
+    max_retries=3
+)
+def process_resume(self, id: str):
     db = SessionLocal()
     parser = ResumeParser()
     analyzer = ResumeAnalyzer()
@@ -46,6 +50,20 @@ def process_resume(id: str):
 
         db.commit()
 
+    except AIProviderException as e:
+        if self.request.retries >= self.max_retries:
+            if resume:
+                resume.status = "FAILED"
+                resume.error_message = str(e)
+                db.commit()
+
+            raise e
+
+        raise self.retry(
+            exc=e,
+            countdown=10
+        )
+    
     except Exception as e:
         if resume:
             resume.status = "FAILED"
