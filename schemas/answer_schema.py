@@ -9,8 +9,9 @@ class AnswerResponse(BaseModel):
     id: str
     answer_text: str
     feedback: str
-    score: str
+    score: int
+    suggested_improvement: str | None
+    question_id: str
 
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    class Config:
+        from_attributes = True

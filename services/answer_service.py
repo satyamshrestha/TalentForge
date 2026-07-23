@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from exceptions.answer_exception import QuestionAlreadyAnsweredException
 from exceptions.question_exception import QuestionNotFoundException
+from ai.services.answer_evaluator import AnswerEvaluator
 from models.answer import Answer
-from services.answer_evaluator import AnswerEvaluator
 from repositories.answer_repository import AnswerRepository
 from repositories.interview_repository import InterviewRepository
 from repositories.question_repository import QuestionRepository
@@ -40,13 +40,17 @@ class AnswerService:
         if existing_answer:
             raise QuestionAlreadyAnsweredException()
         
-        evaluation = self.answer_evaluator.evaluate(question.question_text, answer_text)
-        
+        evaluation = self.answer_evaluator.evaluate(
+            question.question_text,
+            answer_text
+        )
+
         answer = Answer(
             id=str(uuid.uuid4()),
             answer_text=answer_text,
-            feedback=evaluation["feedback"],
-            score=str(evaluation["score"]),
+            feedback=evaluation.feedback,
+            score=evaluation.score,
+            suggested_improvement=evaluation.suggested_improvement,
             question_id=question.id
         )
         answer = self.answer_repository.create_answer(db, answer)
