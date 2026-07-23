@@ -39,8 +39,9 @@ class InterviewPaginationResponse(BaseModel):
 
 class AnswerDetailResponse(BaseModel):
     id: str
-    score: str
+    score: int
     feedback: str
+    suggested_improvement: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True
@@ -63,7 +64,7 @@ class InterviewStatisticsResponse(BaseModel):
 
 class InterviewDetailResponse(BaseModel):
     id: str
-    role_target: str
+    role_target: str | None
     status: str
     created_at: datetime
     statistics: InterviewStatisticsResponse

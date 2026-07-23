@@ -33,7 +33,7 @@ class ProfileResponse(BaseModel):
     )
 
 class ProfileUpdate(BaseModel):
-    full_name: str
+    full_name: str | None = None
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
