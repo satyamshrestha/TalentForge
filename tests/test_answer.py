@@ -1,4 +1,5 @@
 import uuid
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
@@ -6,73 +7,95 @@ from app import app
 from models.interview import Interview
 from models.question import Question
 from models.user import User
+from services.deps import get_answer_service
 from tests.conftest import TestingSessionLocal
+
 
 client = TestClient(app)
 
 
+class FakeAnswerService:
+
+    def submit_answer(self, db, question_id, answer_text):
+        return SimpleNamespace(
+            id=str(uuid.uuid4()),
+            answer_text=answer_text,
+            feedback="Good answer",
+            score=9,
+            suggested_improvement="Add more examples",
+            question_id=question_id
+        )
+
+
 def test_submit_answer():
-    db = TestingSessionLocal()
 
-    user = User(
-        id=str(uuid.uuid4()),
-        email="seed@example.com",
-        password="$2b$12$dummy",
-        role="student"
-    )
+    app.dependency_overrides[get_answer_service] = lambda: FakeAnswerService()
 
-    interview = Interview(
-        id=str(uuid.uuid4()),
-        role_target="Backend Developer",
-        status="IN_PROGRESS",
-        user=user
-    )
+    try:
+        db = TestingSessionLocal()
 
-    question = Question(
-        id=str(uuid.uuid4()),
-        question_text="What is Python?",
-        interview=interview
-    )
+        user = User(
+            id=str(uuid.uuid4()),
+            email="seed@example.com",
+            password="$2b$12$dummy",
+            role="student"
+        )
 
-    db.add(user)
-    db.commit()
+        interview = Interview(
+            id=str(uuid.uuid4()),
+            role_target="Backend Developer",
+            status="IN_PROGRESS",
+            user=user
+        )
 
-    question_id = question.id
-    db.close()
+        question = Question(
+            id=str(uuid.uuid4()),
+            question_text="What is Python?",
+            interview=interview
+        )
 
-    client.post(
-        "/api/v1/auth/signup",
-        json={
-            "email": "answerlogin@example.com",
-            "password": "password123"
-        }
-    )
+        db.add(user)
+        db.commit()
 
-    login = client.post(
-        "/api/v1/auth/login",
-        data={
-            "username": "answerlogin@example.com",
-            "password": "password123"
-        }
-    )
+        question_id = question.id
+        db.close()
 
-    token = login.json()["access_token"]
+        client.post(
+            "/api/v1/auth/signup",
+            json={
+                "email": "answerlogin@example.com",
+                "password": "password123"
+            }
+        )
 
-    response = client.post(
-        "/api/v1/answers",
-        json={
-            "question_id": question_id,
-            "answer_text": "Python is a programming language."
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
-    )
+        login = client.post(
+            "/api/v1/auth/login",
+            data={
+                "username": "answerlogin@example.com",
+                "password": "password123"
+            }
+        )
 
-    assert response.status_code == 200
+        token = login.json()["access_token"]
 
-    data = response.json()
+        response = client.post(
+            "/api/v1/answers",
+            json={
+                "question_id": question_id,
+                "answer_text": "Python is a programming language."
+            },
+            headers={
+                "Authorization": f"Bearer {token}"
+            }
+        )
 
-    assert data["answer_text"] == "Python is a programming language."
-    assert data["feedback"] is not None
-    assert data["score"] is not None
+        assert response.status_code == 200
+
+        data = response.json()
+
+        assert data["answer_text"] == "Python is a programming language."
+        assert data["feedback"] is not None
+        assert data["score"] is not None
+
+    finally:
+        app.dependency_overrides.clear()
