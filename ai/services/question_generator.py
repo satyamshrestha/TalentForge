@@ -16,4 +16,4 @@ class QuestionGenerator:
         return parse_ai_response(
             response,
             QuestionGenerationResponse
-        )
+        ).questions

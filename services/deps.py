@@ -1,3 +1,4 @@
+from ai.services.question_generator import QuestionGenerator
 from repositories.answer_repository import AnswerRepository
 from repositories.audit_log_repository import AuditLogRepository
 from repositories.dashboard_repository import DashboardRepository
@@ -10,7 +11,6 @@ from services.answer_service import AnswerService
 from services.audit_log_service import AuditLogService
 from services.dashboard_service import DashboardService
 from services.interview_service import InterviewService
-from services.question_generator import QuestionGenerator
 from services.resume_service import ResumeService
 from services.user_service import UserService
 

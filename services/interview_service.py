@@ -11,6 +11,7 @@ from exceptions.resume_exception import (
     ResumeNotFoundException,
     ResumeAccessDeniedException,
 )
+from ai.services.question_generator import QuestionGenerator
 from models.user import User
 from models.interview import Interview
 from models.question import Question
@@ -18,7 +19,6 @@ from repositories.interview_repository import InterviewRepository
 from repositories.question_repository import QuestionRepository
 from repositories.resume_repository import ResumeRepository
 from services.audit_log_service import AuditLogService
-from services.question_generator import QuestionGenerator
 
 class InterviewService:
 
@@ -50,6 +50,7 @@ class InterviewService:
         
         parsed_resume = resume.parsed_text or {}
         resume_text = parsed_resume.get("raw_text")
+        print(resume_text)
 
         if not resume_text:
             raise ResumeTextNotFoundException()
