@@ -7,7 +7,7 @@ class ResumeAnalyzer:
     def __init__(self):
         self.provider = get_provider()
 
-    def analyze(self, resume_text: str) -> str:
+    def analyze(self, resume_text: str) -> ResumeAnalysisResponse:
         prompt = RESUME_ANALYSIS_PROMPT.format(resume=resume_text)
         response = self.provider.generate(prompt)
 

@@ -9,7 +9,7 @@ class QuestionGenerator:
     def __init__(self):
         self.provider = get_provider()
 
-    def generate(self, resume_text: str) -> str:
+    def generate(self, resume_text: str) -> list[str]:
         prompt = QUESTION_GENERATION_PROMPT.format(resume=resume_text)
         response = self.provider.generate(prompt)
 
