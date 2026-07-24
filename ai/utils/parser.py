@@ -1,5 +1,7 @@
 import json
 
+from pydantic import ValidationError
+
 from exceptions.ai_exception import AIResponseFormatException
 
 
@@ -8,5 +10,5 @@ def parse_ai_response(response: str, schema):
         data = json.loads(response)
         return schema(**data)
 
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, ValidationError):
         raise AIResponseFormatException()
