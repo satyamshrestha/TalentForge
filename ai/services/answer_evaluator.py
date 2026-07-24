@@ -11,7 +11,7 @@ class AnswerEvaluator:
         self,
         question: str,
         answer: str,
-    ) -> str:
+    ) -> AnswerEvaluationResponse:
         prompt = ANSWER_EVALUATION_PROMPT.format(
             question=question,
             answer=answer,
