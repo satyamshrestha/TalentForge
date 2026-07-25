@@ -128,7 +128,16 @@ def test_get_resume_not_found():
     assert response.status_code == 404
     assert response.json()["detail"] == "Resume does not exist!"
 
-def test_get_my_resumes_contains_parsed_text():
+@patch("services.resume_service.redis_client.get")
+@patch("services.resume_service.redis_client.delete")
+@patch("services.resume_service.process_resume.delay")
+def test_get_my_resumes_contains_parsed_text(
+    mock_delay,
+    mock_redis_delete,
+    mock_redis_get
+):
+    mock_redis_get.return_value = None
+
     client.post(
         "/api/v1/auth/signup",
         json={
@@ -182,3 +191,7 @@ def test_get_my_resumes_contains_parsed_text():
     assert "file_path" in resume
     assert "status" in resume
     assert "parsed_text" in resume
+
+    mock_delay.assert_called_once()
+    mock_redis_delete.assert_called_once()
+    mock_redis_get.assert_called_once()
