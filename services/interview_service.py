@@ -50,7 +50,6 @@ class InterviewService:
         
         parsed_resume = resume.parsed_text or {}
         resume_text = parsed_resume.get("raw_text")
-        print(resume_text)
 
         if not resume_text:
             raise ResumeTextNotFoundException()
@@ -159,28 +158,19 @@ class InterviewService:
     ):
         interview = self._accessible_interview(db, interview_id, current_user)
         statistics = self._build_interview_statistics(interview)
-        feedbacks = [
-            question.answer.feedback
-            for question in interview.questions
-            if question.answer
-        ]           # Future enhancement: Use feedbacks to generate more detailed strengths/weaknesses.
+        # TODO: Use feedbacks to generate more detailed strengths/weaknesses.
 
         strengths = []
         weaknesses = []
-        if statistics["average_score"] >= 8:
+        average = statistics["average_score"]
+        if average >= 8:
             strengths.append("Strong overall interview performance.")
-        elif statistics["average_score"] >= 6:
+            overall_feedback = ("Strong backend knowledge demonstrated.")
+        elif average >= 6:
             strengths.append("Good backend fundamentals.")
+            overall_feedback = ("Good understanding with room for improvement.")
         else:
             weaknesses.append("Needs improvement in core backend concepts.")
-        
-        if statistics["average_score"] >= 8:
-            overall_feedback = ("Strong backend knowledge demonstrated.")
-
-        elif statistics["average_score"] >= 6:
-            overall_feedback = ("Good understanding with room for improvement.")
-
-        else:
             overall_feedback = ("Further practice is recommended.")
 
         return {
