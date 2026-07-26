@@ -34,3 +34,10 @@ class ResumeAccessDeniedException(AppException):
             status_code=403,
             detail="Resume does not belong to the current user!"
         )
+
+class ResumeNotReadyException(AppException):
+    def __init__(self):
+        super().__init__(
+            status_code=409,
+            detail="Resume is still being processed. Please try again later."
+        )

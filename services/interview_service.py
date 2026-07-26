@@ -10,6 +10,7 @@ from exceptions.interview_exception import (
 from exceptions.resume_exception import (
     ResumeNotFoundException,
     ResumeAccessDeniedException,
+    ResumeNotReadyException,
 )
 from ai.services.question_generator import QuestionGenerator
 from models.user import User
@@ -47,7 +48,9 @@ class InterviewService:
             raise ResumeNotFoundException()
         if resume.user_id != current_user.id:
             raise ResumeAccessDeniedException()
-        
+        if resume.status != "COMPLETED":
+            raise ResumeNotReadyException()
+
         parsed_resume = resume.parsed_text or {}
         resume_text = parsed_resume.get("raw_text")
 
