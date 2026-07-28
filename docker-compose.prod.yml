@@ -7,9 +7,18 @@ services:
       - db
       - redis
     environment:
-      DATABASE_URL: postgresql://postgres:database123@db:5432/talentforge
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      LLM_PROVIDER: ${LLM_PROVIDER}
+      LLM_MODEL: ${LLM_MODEL}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT}
+      OLLAMA_RETRIES: ${OLLAMA_RETRIES}
+    volumes:
+      - resume_uploads:/app/uploads/resumes
 
   celery_worker:
     image: satyamshrestha/talentforge:latest
@@ -18,16 +27,25 @@ services:
       - db
       - redis
     environment:
-      DATABASE_URL: postgresql://postgres:database123@db:5432/talentforge
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      LLM_PROVIDER: ${LLM_PROVIDER}
+      LLM_MODEL: ${LLM_MODEL}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT}
+      OLLAMA_RETRIES: ${OLLAMA_RETRIES}
+    volumes:
+      - resume_uploads:/app/uploads/resumes
 
   db:
     image: postgres:17
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: database123
-      POSTGRES_DB: talentforge
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -36,6 +54,13 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:9.5
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
   postgres_data:
+  pgadmin_data:
+  resume_uploads:
