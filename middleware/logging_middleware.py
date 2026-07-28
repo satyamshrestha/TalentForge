@@ -1,11 +1,19 @@
-import time
 import logging
+import time
 import uuid
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from utils.logger import (
+    clear_request_id,
+    set_request_id,
+)
+
+
 logger = logging.getLogger("talentforge")
+
+
 class LoggingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(
@@ -13,10 +21,18 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next
     ):
-        client_ip = request.client.host
-        request_id = str(uuid.uuid4())[:8]
-        start_time = time.perf_counter()
+        request_id = str(uuid.uuid4())
+        client_ip = (
+            request.client.host
+            if request.client
+            else "unknown"
+        )
+
+        token = set_request_id(request_id)
         request.state.request_id = request_id
+
+        start_time = time.perf_counter()
+
         try:
             response = await call_next(request)
 
@@ -24,14 +40,22 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 time.perf_counter() - start_time
             ) * 1000
 
+            response.headers["X-Request-ID"] = request_id
+
             logger.info(
-                f"[{request_id}] "
-                f"IP={client_ip} "
-                f"{request.method} "
-                f"{request.url} "
-                f"Status={response.status_code} "
-                f"Duration={duration:.2f}ms"
+                "Request completed | "
+                "IP=%s | "
+                "method=%s | "
+                "path=%s | "
+                "status=%s | "
+                "duration=%.2fms",
+                client_ip,
+                request.method,
+                request.url.path,
+                response.status_code,
+                duration,
             )
+
             return response
 
         except Exception:
@@ -40,11 +64,18 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             ) * 1000
 
             logger.exception(
-                f"[{request_id}] "
-                f"IP={client_ip} "
-                f"{request.method} "
-                f"{request.url} "
-                f"FAILED "
-                f"Duration={duration:.2f}ms"
+                "Request failed | "
+                "IP=%s | "
+                "method=%s | "
+                "path=%s | "
+                "duration=%.2fms",
+                client_ip,
+                request.method,
+                request.url.path,
+                duration,
             )
+
             raise
+
+        finally:
+            clear_request_id(token)
