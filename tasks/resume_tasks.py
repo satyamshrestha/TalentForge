@@ -1,14 +1,12 @@
-from tasks.celery_app import celery
 from pypdf import PdfReader
-from redis import Redis
 
+from ai.services.resume_analyzer import ResumeAnalyzer
 from db.database import SessionLocal
 from db.redis import redis_client
 from models.resume import Resume
 from services.resume_parser import ResumeParser
-from ai.services.resume_analyzer import ResumeAnalyzer
+from tasks.celery_app import celery
 from exceptions.ai_exception import AIProviderException
-from utils.config import settings
 
 
 @celery.task(
@@ -61,6 +59,8 @@ def process_resume(self, id: str):
         redis_client.delete(cache_key)
 
     except AIProviderException as e:
+        db.rollback()
+
         if self.request.retries >= self.max_retries:
             if resume:
                 resume.status = "FAILED"
@@ -70,7 +70,7 @@ def process_resume(self, id: str):
                 cache_key = f"user:{resume.user_id}:resumes"
                 redis_client.delete(cache_key)
 
-            raise e
+            raise
 
         raise self.retry(
             exc=e,
@@ -78,13 +78,17 @@ def process_resume(self, id: str):
         )
 
     except Exception as e:
+        db.rollback()
+
         if resume:
             resume.status = "FAILED"
-            resume.error_message = repr(e)
+            resume.error_message = str(e)
             db.commit()
 
             cache_key = f"user:{resume.user_id}:resumes"
             redis_client.delete(cache_key)
+
+        raise
 
     finally:
         db.close()
