@@ -65,10 +65,12 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             logger.exception(
                 "Request failed | "
+                "request_id=%s | "
                 "IP=%s | "
                 "method=%s | "
                 "path=%s | "
                 "duration=%.2fms",
+                request_id,
                 client_ip,
                 request.method,
                 request.url.path,
