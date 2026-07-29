@@ -3,9 +3,13 @@ services:
     image: satyamshrestha/talentforge:latest
     ports:
       - "8000:8000"
+
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
@@ -17,15 +21,28 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
       OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT}
       OLLAMA_RETRIES: ${OLLAMA_RETRIES}
+
     volumes:
       - resume_uploads:/app/uploads/resumes
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 
   celery_worker:
     image: satyamshrestha/talentforge:latest
+
     command: celery -A tasks.celery_app.celery worker --loglevel=info
+
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
@@ -37,28 +54,58 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
       OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT}
       OLLAMA_RETRIES: ${OLLAMA_RETRIES}
+
     volumes:
       - resume_uploads:/app/uploads/resumes
 
+
   db:
     image: postgres:17
+
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   redis:
     image: redis:8.2
 
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
   pgadmin:
     image: dpage/pgadmin4:9.5
+
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+
 
 volumes:
   postgres_data:
