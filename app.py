@@ -15,8 +15,14 @@ from slowapi import _rate_limit_exceeded_handler
 from utils.config import settings
 from utils.logger import configure_logging
 
-app = FastAPI()
 configure_logging()
+
+app = FastAPI(
+    title="TalentForge API",
+    version="1.0.0",
+    description="AI-powered interview preparation platform."
+)
+
 app.state.limiter = limiter
 
 app.add_middleware(
@@ -31,8 +37,17 @@ app.add_middleware(
         "http://localhost:5173",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    ],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+    ],
 )
 
 app.add_middleware(
@@ -62,6 +77,10 @@ async def app_exception_handler(
         }
     )
 
-@app.get("/")
+@app.get("/", tags=["Health"])
 def home():
-    return {"message": "Welcome to TalentForge!"}
+    return {
+        "name": "TalentForge API",
+        "status": "running",
+        "version": "1.0.0"
+    }
