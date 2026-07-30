@@ -4,19 +4,38 @@ services:
     ports:
       - "8000:8000"
 
+    restart: unless-stopped
+
     volumes:
       - .:/app
 
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
     env_file:
       - .env
 
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
   db:
     image: postgres:17
-    
+
+    restart: unless-stopped
+
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -28,9 +47,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
   pgadmin:
     image: dpage/pgadmin4
-    
+
+    restart: unless-stopped
+
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
@@ -42,16 +74,34 @@ services:
       - pgadmin_data:/var/lib/pgadmin
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
 
   redis:
-    image: redis:latest
+    image: redis:8.2
+
+    restart: unless-stopped
 
     ports:
       - "6379:6379"
 
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
   celery_worker:
     build: .
+
+    restart: unless-stopped
 
     command: celery -A tasks.celery_app.celery worker --loglevel=info
 
@@ -59,11 +109,14 @@ services:
       - .:/app
 
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
     env_file:
       - .env
+
 
 volumes:
   postgres_data:
