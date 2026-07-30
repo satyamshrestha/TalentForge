@@ -18,8 +18,8 @@ from utils.logger import configure_logging
 configure_logging()
 
 app = FastAPI(
-    title="TalentForge API",
-    version="1.0.0",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
     description="AI-powered interview preparation platform."
 )
 
@@ -32,10 +32,7 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-    ],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=[
         "GET",
@@ -80,7 +77,7 @@ async def app_exception_handler(
 @app.get("/", tags=["Health"])
 def home():
     return {
-        "name": "TalentForge API",
+        "name": settings.APP_NAME,
         "status": "running",
-        "version": "1.0.0"
+        "version": settings.APP_VERSION,
     }

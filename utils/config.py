@@ -14,6 +14,12 @@ class Settings(BaseSettings):
         "*.localhost",
         "testserver",
     ]
+    APP_NAME: str = "TalentForge API"
+    APP_VERSION: str = "1.0.0"
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
