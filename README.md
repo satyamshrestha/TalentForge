@@ -758,26 +758,37 @@ entity_id
 │       └── backend.yml
 │
 ├── ai/
+│   ├── providera/
+│   │   ├── base.py
+│   │   ├── ollama_provider.py
+│   │   └── openai_provider.py(Contains just the placeholder if openai's llm is to be used)
 │   ├── services/
 │   │   ├── answer_evaluator.py
 │   │   ├── question_generator.py
 │   │   └── resume_analyzer.py
-│   ├── provider_factory.py
 │   ├── prompts.py
+│   ├── provider_factory.py
 │   ├── schemas.py
 │   └── utils/
 │       └── parser.py
 │
 ├── alembic/
-│   └── ...
+│   ├── versions(contains the migration files)
+│   └── env.py
 │
 ├── api/
 │   └── v1/
-│       └── ...
+│       └── api.py
 │
 ├── auth/
+│   ├── deps.py
+│   ├── google_oauth.py
 │   ├── hashing.py
 │   ├── jwt_handler.py
+│   ├── oauth_state.py
+│   ├── oauth2.py
+│   ├── role_deps.py
+│   ├── scope_deps.py
 │   └── scopes.py
 │
 ├── db/
@@ -807,6 +818,9 @@ entity_id
 │   ├── resume.py
 │   └── user.py
 │
+├── nginx/
+│   └── nginx.conf
+│
 ├── repositories/
 │   ├── answer_repository.py
 │   ├── audit_log_repository.py
@@ -817,15 +831,27 @@ entity_id
 │   └── user_repository.py
 │
 ├── routers/
-│   └── ...
+│   ├── admin_router.py
+│   ├── answer_router.py
+│   ├── auth_router.py
+│   ├── dashboard_router.py
+│   ├── health_router.py
+│   ├── interview_router.py
+│   ├── profile_router.py
+│   └── resume_router.py
 │
 ├── schemas/
-│   └── ...
+│   ├── answer_schema.py
+│   ├── dashboard_schema.py
+│   ├── interview_schema.py
+│   ├── resume_schema.py
+│   └── user_schema.py
 │
 ├── services/
 │   ├── answer_service.py
 │   ├── audit_log_service.py
 │   ├── dashboard_service.py
+│   ├── deps.py
 │   ├── interview_service.py
 │   ├── resume_parser.py
 │   ├── resume_service.py
@@ -838,10 +864,12 @@ entity_id
 │
 ├── tests/
 │   ├── conftest.py
+│   ├── test_ai_services.py
 │   ├── test_answer.py
 │   ├── test_app.py
 │   ├── test_auth.py
 │   ├── test_dashboard.py
+│   ├── test_interview_service.py
 │   ├── test_interview.py
 │   └── test_resume.py
 │
@@ -851,7 +879,10 @@ entity_id
 │   └── logger.py
 │
 ├── .dockerignore
+├── .env
 ├── .env.example
+├── .env.prod
+├── .env.test
 ├── .gitignore
 ├── alembic.ini
 ├── app.py
