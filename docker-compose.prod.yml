@@ -1,8 +1,28 @@
 services:
+
+  nginx:
+    image: nginx:latest
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+
   api:
     image: satyamshrestha/talentforge:latest
-    ports:
-      - "8000:8000"
+
+    restart: unless-stopped
+
+    expose:
+      - "8000"
 
     depends_on:
       db:
@@ -15,7 +35,9 @@ services:
       REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+
       UPLOAD_DIR: ${UPLOAD_DIR}
+
       LLM_PROVIDER: ${LLM_PROVIDER}
       LLM_MODEL: ${LLM_MODEL}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
@@ -26,7 +48,13 @@ services:
       - resume_uploads:/app/uploads/resumes
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -34,6 +62,8 @@ services:
 
   celery_worker:
     image: satyamshrestha/talentforge:latest
+
+    restart: unless-stopped
 
     command: celery -A tasks.celery_app.celery worker --loglevel=info
 
@@ -48,7 +78,9 @@ services:
       REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+
       UPLOAD_DIR: ${UPLOAD_DIR}
+
       LLM_PROVIDER: ${LLM_PROVIDER}
       LLM_MODEL: ${LLM_MODEL}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
@@ -61,6 +93,8 @@ services:
 
   db:
     image: postgres:17
+
+    restart: unless-stopped
 
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -84,6 +118,8 @@ services:
   redis:
     image: redis:8.2
 
+    restart: unless-stopped
+
     healthcheck:
       test:
         [
@@ -96,18 +132,6 @@ services:
       retries: 5
 
 
-  pgadmin:
-    image: dpage/pgadmin4:9.5
-
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-
-
 volumes:
   postgres_data:
-  pgadmin_data:
   resume_uploads:
