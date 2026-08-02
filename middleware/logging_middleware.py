@@ -19,9 +19,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,
         request: Request,
-        call_next
+        call_next,
     ):
         request_id = str(uuid.uuid4())
+
         client_ip = (
             request.client.host
             if request.client
@@ -65,12 +66,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
             logger.exception(
                 "Request failed | "
-                "request_id=%s | "
                 "IP=%s | "
                 "method=%s | "
                 "path=%s | "
                 "duration=%.2fms",
-                request_id,
                 client_ip,
                 request.method,
                 request.url.path,

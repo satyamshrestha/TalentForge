@@ -4,14 +4,15 @@ import logging
 
 request_id_context = contextvars.ContextVar(
     "request_id",
-    default="-"
+    default="-",
 )
 
 
 class RequestIdFilter(logging.Filter):
+
     def filter(
         self,
-        record: logging.LogRecord
+        record: logging.LogRecord,
     ) -> bool:
         record.request_id = request_id_context.get()
         return True
@@ -26,6 +27,7 @@ def clear_request_id(token):
 
 
 def configure_logging():
+
     handler = logging.StreamHandler()
 
     handler.setFormatter(
@@ -41,7 +43,9 @@ def configure_logging():
     handler.addFilter(RequestIdFilter())
 
     root_logger = logging.getLogger()
+
     root_logger.setLevel(logging.INFO)
 
-    if not root_logger.handlers:
-        root_logger.addHandler(handler)
+    root_logger.handlers.clear()
+
+    root_logger.addHandler(handler)
