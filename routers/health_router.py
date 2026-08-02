@@ -1,56 +1,43 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from db.database import engine
+from db.deps import get_db
 from db.redis import redis_client
-
 
 router = APIRouter(
     prefix="/health",
-    tags=["Health"]
+    tags=["Health"],
 )
 
 
-@router.get("")
-def health_check():
-    return {
-        "status": "ok"
-    }
+@router.get(
+    "/live",
+    summary="Liveness Probe",
+)
+def liveness():
+    return {"status": "alive"}
 
 
-@router.get("/ready")
-def readiness_check():
-
-    checks = {
-        "database": "unknown",
-        "redis": "unknown"
-    }
-
+@router.get(
+    "/ready",
+    summary="Readiness Probe",
+)
+def readiness(
+    db: Session = Depends(get_db),
+):
     try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
-
-        checks["database"] = "ok"
-
-    except Exception:
-        checks["database"] = "failed"
-
-
-    try:
+        db.execute(text("SELECT 1"))
         redis_client.ping()
 
-        checks["redis"] = "ok"
+        return {
+            "status": "ready",
+            "database": "connected",
+            "redis": "connected",
+        }
 
     except Exception:
-        checks["redis"] = "failed"
-
-
-    ready = all(
-        value == "ok"
-        for value in checks.values()
-    )
-
-    return {
-        "status": "ready" if ready else "not_ready",
-        **checks
-    }
+        raise HTTPException(
+            status_code=503,
+            detail="Service unavailable",
+        )
