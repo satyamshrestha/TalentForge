@@ -14,6 +14,8 @@ from exceptions.app_exception import AppException
 from middleware.logging_middleware import LoggingMiddleware
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.rate_limit import limiter
+from middleware.metrics_middleware import MetricsMiddleware
+from routers import metrics_router
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from utils.config import settings
@@ -85,6 +87,7 @@ app.add_middleware(
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(MetricsMiddleware)
 
 
 app.add_exception_handler(
@@ -96,6 +99,9 @@ app.add_exception_handler(
 app.include_router(
     api_router,
     prefix="/api/v1",
+)
+app.include_router(
+    metrics_router.router
 )
 
 
