@@ -31,10 +31,17 @@ services:
         condition: service_healthy
 
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      APP_NAME: ${APP_NAME}
+      APP_VERSION: ${APP_VERSION}
+
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ORIGINS: ${CORS_ORIGINS}
 
       UPLOAD_DIR: ${UPLOAD_DIR}
 
@@ -53,7 +60,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/live')"
         ]
       interval: 30s
       timeout: 10s
@@ -131,7 +138,23 @@ services:
       timeout: 5s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus:v3.5.0
+
+    restart: unless-stopped
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:
   resume_uploads:
+  prometheus_data:

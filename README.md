@@ -796,6 +796,9 @@ entity_id
 │   ├── deps.py
 │   └── redis.py
 │
+├── docs/
+│   └── deployment.md
+│
 ├── exceptions/
 │   ├── ai_exception.py
 │   ├── answer_exception.py
@@ -805,8 +808,13 @@ entity_id
 │   ├── resume_exception.py
 │   └── user_exception.py
 │
+├── metrics/
+│   ├── __init__.py
+│   └── metrics.py
+│
 ├── middleware/
 │   ├── logging_middleware.py
+│   ├── metrics_middleware.py
 │   ├── rate_limit.py
 │   └── security_headers.py
 │
@@ -820,6 +828,9 @@ entity_id
 │
 ├── nginx/
 │   └── nginx.conf
+│
+├── prometheus/
+│   └── prometheus.yml
 │
 ├── repositories/
 │   ├── answer_repository.py
@@ -837,6 +848,7 @@ entity_id
 │   ├── dashboard_router.py
 │   ├── health_router.py
 │   ├── interview_router.py
+│   ├── metrics_router.py
 │   ├── profile_router.py
 │   └── resume_router.py
 │
@@ -846,6 +858,9 @@ entity_id
 │   ├── interview_schema.py
 │   ├── resume_schema.py
 │   └── user_schema.py
+│
+├── scripts/
+│   └── deploy.sh
 │
 ├── services/
 │   ├── answer_service.py

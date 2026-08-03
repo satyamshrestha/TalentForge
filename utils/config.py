@@ -13,6 +13,8 @@ class Settings(BaseSettings):
         "127.0.0.1",
         "*.localhost",
         "testserver",
+        "api",
+        "prometheus",
     ]
     APP_NAME: str = "TalentForge API"
     APP_VERSION: str = "1.0.0"
