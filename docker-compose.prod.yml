@@ -153,8 +153,24 @@ services:
     depends_on:
       api:
         condition: service_healthy
+  
+  grafana:
+    image: grafana/grafana:12.1.1
+
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    depends_on:
+      prometheus:
+        condition: service_started
 
 volumes:
   postgres_data:
   resume_uploads:
   prometheus_data:
+  grafana_data:
