@@ -11,8 +11,7 @@ from utils.logger import (
 )
 
 
-logger = logging.getLogger("talentforge")
-
+logger = logging.getLogger("talentforge.access")
 
 class LoggingMiddleware(BaseHTTPMiddleware):
 

@@ -24,8 +24,7 @@ from utils.logger import configure_logging
 
 configure_logging()
 
-logger = logging.getLogger("talentforge")
-
+logger = logging.getLogger("talentforge.app")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
