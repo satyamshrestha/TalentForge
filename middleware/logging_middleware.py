@@ -21,7 +21,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next,
     ):
-        request_id = str(uuid.uuid4())
+        request_id = request.headers.get("X-Request-ID")
+
+        if not request_id:
+            request_id = str(uuid.uuid4())
 
         client_ip = (
             request.client.host
