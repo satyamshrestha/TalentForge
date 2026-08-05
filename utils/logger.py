@@ -1,5 +1,8 @@
 import contextvars
 import logging
+import sys
+
+from pythonjsonlogger import jsonlogger
 
 
 request_id_context = contextvars.ContextVar(
@@ -28,15 +31,10 @@ def clear_request_id(token):
 
 def configure_logging():
 
-    handler = logging.StreamHandler()
-
+    handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s | "
-            "%(levelname)s | "
-            "%(name)s | "
-            "request_id=%(request_id)s | "
-            "%(message)s"
+        jsonlogger.JsonFormatter(
+            "%(asctime)s %(levelname)s %(name)s %(request_id)s %(message)s"
         )
     )
 
