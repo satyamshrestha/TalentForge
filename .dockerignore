@@ -4,6 +4,7 @@ __pycache__/
 .git/
 .github/
 .env
+.env.prod
 postgres_data/
 pgadmin_data/
 uploads/
