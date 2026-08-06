@@ -1,14 +1,25 @@
 # TalentForge Deployment Guide
 
-## Requirements
+## Prerequisites
 
-- Docker
+- Docker Engine
 - Docker Compose
 - Git
+- A configured `.env.prod` file
 
-## Environment Variables
+---
 
-Create a `.env.prod` file based on `.env.example`.
+## Environment Configuration
+
+Create a production environment file from the provided template.
+
+```bash
+cp .env.prod.example .env.prod
+```
+
+Fill in all required environment variables before deployment.
+
+---
 
 ## Pull Latest Image
 
@@ -19,7 +30,9 @@ docker compose \
   pull
 ```
 
-## Start Services
+---
+
+## Start Production Services
 
 ```bash
 docker compose \
@@ -28,17 +41,39 @@ docker compose \
   up -d
 ```
 
-## Verify Containers
+---
+
+## Verify Running Containers
 
 ```bash
 docker ps
 ```
 
-## Check API
+---
+
+## Verify API
 
 ```bash
 curl http://localhost/
 ```
+
+Health endpoint:
+
+```bash
+curl http://localhost/api/v1/health/live
+```
+
+---
+
+## Access Monitoring
+
+| Service | URL |
+|---------|-----|
+| API | http://localhost |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
+
+---
 
 ## View Logs
 
@@ -49,6 +84,8 @@ docker compose \
   logs -f
 ```
 
+---
+
 ## Stop Services
 
 ```bash
@@ -58,7 +95,9 @@ docker compose \
   down
 ```
 
-## Update Deployment
+---
+
+## Deploy Latest Version
 
 ```bash
 ./scripts/deploy.sh
