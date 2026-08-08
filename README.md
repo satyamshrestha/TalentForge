@@ -1,159 +1,165 @@
 # TalentForge 🚀
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?logo=sqlalchemy&logoColor=white)
-![Alembic](https://img.shields.io/badge/Alembic-Migrations-593D88)
-![Redis](https://img.shields.io/badge/Redis-Caching-DC382D?logo=redis&logoColor=white)
-![Celery](https://img.shields.io/badge/Celery-Background%20Tasks-37814A?logo=celery&logoColor=white)
-![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-111111)
-![Docker](https://img.shields.io/badge/Docker-Containerization-2496ED?logo=docker&logoColor=white)
-![Pytest](https://img.shields.io/badge/Pytest-Testing-0A9EDC?logo=pytest&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?logo=grafana&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python\&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116-009688?logo=fastapi\&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql\&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00?logo=sqlalchemy\&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis\&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-Background%20Tasks-37814A?logo=celery\&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker\&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions\&logoColor=white)
 
-# TalentForge
+**Production-style AI-powered interview platform built with FastAPI.**
 
-**Production-style AI-powered interview platform built with FastAPI**
+TalentForge is a backend engineering project focused on designing and building a modern AI-powered interview platform using production-oriented software engineering practices.
 
-TalentForge is a backend engineering project focused on designing and building a modern AI-powered platform using real-world software engineering practices.
+The platform allows users to upload resumes, process and analyze candidate information, generate personalized interviews, submit answers, and receive AI-powered evaluations.
 
-The system allows users to upload resumes, analyze candidate information using AI, generate personalized interviews, submit answers, and receive AI-powered evaluations.
-
-The primary goal of TalentForge is not simply building features, but demonstrating how scalable backend systems are architected, tested, deployed, and maintained.
+The primary goal of TalentForge is not simply to build features, but to demonstrate how modern backend systems are **architected, tested, secured, deployed, monitored, and maintained**.
 
 ---
 
-# 📌 Project Highlights
+## 📌 Project Highlights
 
-- Layered backend architecture
-- Repository and service patterns
-- JWT authentication
-- OAuth2 and Google OAuth integration
-- Role-based and scope-based authorization
-- Async processing with Celery
-- Redis caching
-- AI provider abstraction
-- Local LLM integration with Ollama
-- Automated testing
-- Dockerized development environment
-- CI/CD pipeline
-- Observability foundations
+* Layered backend architecture
+* Repository and service patterns
+* Dependency injection
+* JWT authentication
+* OAuth2 password flow
+* Google OAuth authentication
+* Role-based access control
+* Scope-based authorization
+* Asynchronous processing with Celery
+* Redis caching
+* AI provider abstraction
+* Ollama-based AI integration
+* Resume parsing and analysis
+* AI-generated interview questions
+* AI-powered answer evaluation
+* Interview retakes
+* Audit logging
+* Centralized exception handling
+* Prometheus metrics
+* Grafana dashboards
+* Dockerized development and production environments
+* Automated testing with Pytest
+* GitHub Actions CI/CD
 
 ---
 
 # 🏗️ Architecture
 
-TalentForge follows a layered backend architecture:
+TalentForge follows a layered backend architecture that separates HTTP handling, business logic, persistence, and infrastructure concerns.
 
-                Client
-                  |
-                  v
+```text
+                         Client
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   Routers   │
+                    │   API Layer │
+                    └──────┬──────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  Services   │
+                    │Business Logic│
+                    └──────┬──────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │Repositories │
+                    │ Data Access │
+                    └──────┬──────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │ PostgreSQL  │
+                    └─────────────┘
+```
 
-          +---------------+
-          |    Routers    |
-          |   API Layer   |
-          +-------+-------+
-                  |
-                  v
+Supporting infrastructure operates alongside the core application:
 
-          +---------------+
-          |   Services    |
-          | Business Logic|
-          +-------+-------+
-                  |
-                  v
+```text
+                         TalentForge
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+          ▼                   ▼                   ▼
+       Redis               Celery            AI Layer
+      Caching          Background Tasks    Provider System
+          │                   │                   │
+          │                   ▼                   ▼
+          │            Resume Pipeline       Ollama
+          │                   │                   │
+          └───────────────────┼───────────────────┘
+                              │
+                              ▼
+                         PostgreSQL
+```
 
-          +---------------+
-          | Repositories  |
-          | Data Access   |
-          +-------+-------+
-                  |
-                  v
-
-          +---------------+
-          | PostgreSQL 17 |
-          +---------------+
-
-Supporting infrastructure:
-
-                     TalentForge
-
-                          |
-    ------------------------------------------------
-    |                     |                       |
-    v                     v                       v
-
-  Redis                Celery                  AI Layer
- Caching          Background Tasks        Provider System
-
-    |                     |                       |
-    |                     |                       |
-    v                     v                       v
-
-PostgreSQL Resume Pipeline Ollama LLM
-
+This separation allows individual components to evolve without tightly coupling the entire application.
 
 ---
 
 # 🛠️ Tech Stack
 
-| Category | Technology |
-|---|---|
-| Language | Python 3.12 |
-| API Framework | FastAPI |
-| Database | PostgreSQL 17 |
-| ORM | SQLAlchemy 2.x |
-| Migration | Alembic |
-| Authentication | JWT + OAuth2 |
-| Authorization | RBAC + OAuth2 Scopes |
-| Password Security | Passlib + bcrypt |
-| AI Runtime | Ollama |
-| AI Architecture | Provider Abstraction |
-| Resume Processing | pypdf |
-| Validation | Pydantic |
-| Cache | Redis |
-| Background Jobs | Celery |
-| Rate Limiting | SlowAPI |
-| Testing | Pytest |
-| Containerization | Docker |
-| CI/CD | GitHub Actions |
-| Monitoring | Prometheus + Grafana |
+| Category          | Technology                  |
+| ----------------- | --------------------------- |
+| Language          | Python 3.12                 |
+| API Framework     | FastAPI                     |
+| Database          | PostgreSQL 17               |
+| ORM               | SQLAlchemy 2.x              |
+| Migrations        | Alembic                     |
+| Authentication    | JWT + OAuth2                |
+| Authorization     | RBAC + OAuth2 Scopes        |
+| Password Security | Passlib + bcrypt            |
+| AI Runtime        | Ollama                      |
+| AI Architecture   | Provider Abstraction        |
+| Resume Processing | pypdf                       |
+| Validation        | Pydantic                    |
+| Cache             | Redis                       |
+| Background Jobs   | Celery                      |
+| Rate Limiting     | SlowAPI                     |
+| Testing           | Pytest + FastAPI TestClient |
+| Containerization  | Docker + Docker Compose     |
+| CI/CD             | GitHub Actions              |
+| Monitoring        | Prometheus + Grafana        |
 
 ---
 
 # 🔐 Authentication & Authorization
 
-TalentForge implements a complete authentication system.
+TalentForge implements authentication and authorization as separate concerns.
 
-Features:
+## Authentication
 
-- User registration
-- Secure password hashing
-- JWT access tokens
-- JWT refresh tokens
-- OAuth2 password flow
-- Google OAuth authentication
-- Protected routes
-- Profile management
+Supported authentication features include:
 
-
-Authorization uses both:
+* User registration
+* Password hashing
+* JWT access tokens
+* JWT refresh tokens
+* OAuth2 password flow
+* Google OAuth authentication
+* Protected API routes
+* Current-user dependency
+* Profile management
+* Password management
 
 ## Role-Based Access Control
 
-Supported roles:
+TalentForge supports multiple application roles:
 
-
+```text
 student
 teacher
 admin
-
-
+```
 
 ## Scope-Based Authorization
+
+Endpoint permissions can also be controlled through OAuth2 scopes.
 
 Example JWT claims:
 
@@ -167,310 +173,307 @@ Example JWT claims:
     "interview:create"
   ]
 }
+```
 
-This allows fine-grained endpoint permissions.
+This allows the application to enforce fine-grained permissions at the endpoint level.
 
-📄 Resume Processing Pipeline
+---
 
-Resume processing is handled asynchronously.
+# 📄 Resume Processing Pipeline
 
-Flow:
+Resume processing is handled asynchronously so that expensive operations do not block API requests.
 
+```text
 User Uploads Resume
-
-        |
-        v
-
+        │
+        ▼
 File Validation
-
-        |
-        v
-
+        │
+        ▼
 Store PDF
-
-        |
-        v
-
+        │
+        ▼
 Create Resume Record
 Status = PENDING
-
-        |
-        v
-
-Celery Background Task
-
-        |
-        v
-
+        │
+        ▼
+Dispatch Celery Task
+        │
+        ▼
+PROCESSING
+        │
+        ▼
 PDF Text Extraction
-
-        |
-        v
-
+        │
+        ▼
 Resume Parser
-
-        |
-        v
-
+        │
+        ▼
 AI Resume Analyzer
-
-        |
-        v
-
-Save Analysis
-
-        |
-        v
-
+        │
+        ▼
+Save Parsed Data + Analysis
+        │
+        ▼
 COMPLETED
+```
 
-Resume states:
+Resume processing states:
 
+```text
 PENDING
 PROCESSING
 COMPLETED
 FAILED
+```
 
-Long-running operations are moved outside the request-response cycle.
+Failures are recorded against the resume so that processing errors can be inspected without losing the original resume record.
 
-🤖 AI Architecture
+---
 
-TalentForge uses an AI provider abstraction layer.
+# 🤖 AI Architecture
 
-Current provider:
+TalentForge uses a provider abstraction layer to keep application logic independent from the underlying AI runtime.
 
-Ollama
+The **current production implementation is Ollama**.
 
-Architecture:
-
+```text
 AI Service
-
-      |
-      v
-
+    │
+    ▼
 Provider Factory
-
-      |
-      v
-
+    │
+    ▼
 AI Provider Interface
-
-      |
-      v
-
+    │
+    ▼
 Ollama Provider
-
-      |
-      v
-
+    │
+    ▼
 LLM Model
+```
 
-This keeps business logic independent from the underlying AI implementation.
+The AI services communicate with the provider abstraction rather than directly depending on Ollama-specific implementation details.
 
-🧠 AI Services
-Resume Analyzer
+This makes the architecture extensible for future AI providers without requiring business logic to be rewritten.
 
-Analyzes extracted resume information.
+---
 
+# 🧠 AI Services
+
+## Resume Analyzer
+
+Analyzes extracted resume information and produces structured analysis.
+
+```text
 Resume Text
-
-     |
-     v
-
+     │
+     ▼
 Resume Analyzer
-
-     |
-     v
-
+     │
+     ▼
 Ollama
-
-     |
-     v
-
+     │
+     ▼
 Structured Analysis
-Question Generator
+```
 
-Creates interview questions based on candidate experience.
+## Question Generator
 
+Generates interview questions based on the candidate's resume and experience.
+
+```text
 Resume Data
-
-     |
-     v
-
+     │
+     ▼
 Question Generator
-
-     |
-     v
-
+     │
+     ▼
 Ollama
-
-     |
-     v
-
+     │
+     ▼
 Interview Questions
-Answer Evaluator
+```
 
-Evaluates candidate answers.
+## Answer Evaluator
 
+Evaluates candidate answers and generates structured feedback.
+
+```text
 Question + Answer
-
-        |
-        v
-
+        │
+        ▼
 Answer Evaluator
-
-        |
-        v
-
+        │
+        ▼
 Ollama
-
-        |
-        v
-
+        │
+        ▼
 Feedback
 Score
 Improvement Suggestions
+```
 
-AI outputs are validated using Pydantic schemas.
+AI outputs are validated through Pydantic schemas before being used by the application.
 
-🎤 Interview System
+---
+
+# 🎤 Interview System
 
 TalentForge generates AI-powered interviews from processed resumes.
 
-Entity relationship:
+The core domain relationship is:
 
+```text
 User
+├── Resume
+└── Interview
+    └── Question
+        └── Answer
+```
 
- |
- +---- Resume
+Interview functionality includes:
 
+* Resume-based interview generation
+* AI-generated questions
+* Interview sessions
+* Answer submission
+* AI evaluation
+* Interview history
+* Interview retakes
 
- |
- +---- Interview
-          |
-          +---- Question
-                    |
-                    +---- Answer
+---
 
-Features:
+# 🔄 Interview Retakes
 
-Resume-based interviews
-AI-generated questions
-Answer submission
-AI evaluation
-Interview history
-Interview retakes
-🔄 Interview Retakes
+Completed interviews remain unchanged when a user starts a retake.
 
-Completed interviews remain unchanged.
+Instead, TalentForge creates a new interview instance.
 
-A retake creates a new interview instance.
-
+```text
 Original Interview
-
-        |
-        v
-
+        │
+        ▼
+      Retake
+        │
+        ▼
 New Interview
+   ├── New Questions
+   └── New Answers
+```
 
-        |
-        +--- New Questions
-        |
-        +--- New Answers
+This preserves historical interview data while allowing users to attempt the interview again.
 
-This preserves historical data.
+---
 
-⚡ Redis Caching
+# ⚡ Redis Caching
 
-TalentForge uses Redis with the cache-aside pattern.
+TalentForge uses Redis with a **cache-aside** strategy.
 
-Example:
-
+```text
 Request
+   │
+   ▼
+ Redis
+   │
+   ├── Cache Hit ───────► Return Cached Data
+   │
+   └── Cache Miss
+            │
+            ▼
+       PostgreSQL
+            │
+            ▼
+       Update Cache
+            │
+            ▼
+       Return Data
+```
 
-   |
-   v
+Current caching behavior includes:
 
-Redis
+* Resume retrieval caching
+* TTL-based expiration
+* Cache invalidation when resume data changes
 
-   |
-   +---- Cache Hit
-   |
-   +---- Cache Miss
-             |
-             v
-        PostgreSQL
-             |
-             v
-        Update Cache
+Default cache TTL:
 
-Current caching:
-
-Resume retrieval caching
-TTL expiration
-Cache invalidation on updates
-
-Default TTL:
-
+```text
 300 seconds
-⚙️ Background Processing
+```
 
-Celery handles heavy operations.
+---
 
-Current tasks:
+# ⚙️ Background Processing
 
+Celery handles long-running workloads outside the main request-response cycle.
+
+Current resume processing flow:
+
+```text
 PDF Processing
-
-      |
-      v
-
+      │
+      ▼
 Resume Extraction
-
-      |
-      v
-
+      │
+      ▼
+Resume Parsing
+      │
+      ▼
 AI Analysis
-
-      |
-      v
-
+      │
+      ▼
 Database Update
+```
 
-Benefits:
+Benefits include:
 
-Faster API responses
-Better scalability
-Retry handling for failures
-🧾 Audit Logging
+* Faster API responses
+* Non-blocking request handling
+* Better workload isolation
+* Retry handling for failures
+* Improved scalability
 
-Important user actions are tracked.
+---
 
-Examples:
+# 🧾 Audit Logging
 
+Important user actions are recorded through the audit logging system.
+
+Examples include:
+
+```text
 CREATE_INTERVIEW
 RETAKE_INTERVIEW
 DELETE_INTERVIEW
 SUBMIT_ANSWER
+```
 
-Audit records:
+Audit records contain:
 
+```text
 id
 user_id
 action
 entity_type
 entity_id
-🧱 Exception Architecture
+```
 
-TalentForge uses centralized application exceptions.
+This provides a persistent record of important application-level actions.
 
-Examples:
+---
 
+# 🧱 Exception Architecture
+
+TalentForge uses centralized application-specific exceptions rather than scattering raw HTTP exceptions throughout the service layer.
+
+Examples include:
+
+```text
 UserAlreadyExistsException
-
 InvalidCredentialsException
 
 ResumeNotFoundException
-
 ResumeAccessDeniedException
 
 InterviewNotFoundException
@@ -478,107 +481,157 @@ InterviewNotFoundException
 QuestionAlreadyAnsweredException
 
 AIProviderException
+```
 
-Benefits:
+Centralized exception handling provides:
 
-Consistent API responses
-Cleaner services
-Easier debugging
-📊 Observability
+* Consistent API error responses
+* Cleaner service-layer code
+* Easier debugging
+* Better separation between business logic and HTTP concerns
 
-The project includes foundations for production monitoring.
+---
 
-Current components:
+# 📊 Observability
 
-Prometheus metrics
-Grafana dashboards
-Request logging middleware
-Security middleware
-🧪 Testing
+TalentForge includes foundations for production monitoring and observability.
 
-Testing stack:
+Current components include:
 
-Pytest
-FastAPI TestClient
-Dependency overrides
-Test database
+* Prometheus metrics
+* Grafana dashboards
+* Request logging middleware
+* Metrics middleware
+* Security middleware
+* Health endpoints
 
-Covered areas:
+The monitoring architecture is designed to provide visibility into application behavior and operational health.
 
-Application startup
-Authentication
-JWT flows
-Protected routes
-Resume workflows
-Interview workflows
-Answer evaluation
-Dashboard services
-AI services
-🐳 Docker Architecture
+---
 
-Development environment:
+# 🧪 Testing
 
-              FastAPI
+TalentForge uses Pytest and FastAPI's testing utilities.
 
-                 |
-     -------------------------
+Testing infrastructure includes:
 
-     |          |            |
+* Pytest
+* FastAPI TestClient
+* Dependency overrides
+* Dedicated test database
 
- PostgreSQL   Redis      Celery Worker
+Current test coverage includes areas such as:
 
-Docker services:
+* Application startup
+* Authentication
+* JWT flows
+* Protected routes
+* Resume workflows
+* Interview workflows
+* Answer submission
+* Dashboard services
+* AI services
 
+The project also runs automated tests through GitHub Actions.
+
+---
+
+# 🐳 Docker Architecture
+
+TalentForge uses Docker Compose to provide a consistent development environment.
+
+```text
+                         FastAPI
+                            │
+             ┌──────────────┼──────────────┐
+             │              │              │
+             ▼              ▼              ▼
+        PostgreSQL        Redis      Celery Worker
+             │              │              │
+             └──────────────┴──────────────┘
+```
+
+Development services include:
+
+```text
 api
 db
 redis
 celery_worker
 pgadmin
-🔄 CI/CD Pipeline
+```
 
-GitHub Actions validates every change.
+Production deployment additionally includes infrastructure such as:
 
-Pipeline:
+```text
+nginx
+prometheus
+grafana
+```
 
+---
+
+# 🔄 CI/CD Pipeline
+
+GitHub Actions automatically validates changes pushed to the repository.
+
+The general pipeline is:
+
+```text
 Push / Pull Request
-
-          |
-          v
-
+        │
+        ▼
 Install Dependencies
-
-          |
-          v
-
+        │
+        ▼
 Run Tests
-
-          |
-          v
-
+        │
+        ▼
 Build Docker Image
-
-          |
-          v
-
+        │
+        ▼
 Publish Image
-📁 Project Structure
-TalentForge
+```
 
+This provides automated validation before changes are considered stable.
+
+---
+
+# 📁 Project Structure
+
+```text
+TalentForge/
+│
+├── .github/
+│   └── workflows/
+│
 ├── ai/
 │   ├── providers/
 │   ├── services/
 │   ├── schemas.py
+│   ├── prompts.py
 │   └── provider_factory.py
+│
+├── alembic/
+│   └── versions/
+│
+├── api/
+│   └── v1/
 │
 ├── auth/
 ├── db/
+├── docs/
 ├── exceptions/
-├── middleware/
+├── infra/
 ├── metrics/
+├── middleware/
 ├── models/
+├── nginx/
+├── prometheus/
 ├── repositories/
 ├── routers/
 ├── schemas/
+├── scripts/
 ├── services/
 ├── tasks/
 ├── tests/
@@ -586,80 +639,135 @@ TalentForge
 │
 ├── Dockerfile
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── alembic.ini
-└── app.py
-🚀 Running Locally
-Clone
-git clone https://github.com/<username>/TalentForge.git
+├── app.py
+└── requirements.txt
+```
 
+The project follows clear boundaries between API routing, business logic, persistence, infrastructure, AI functionality, and background processing.
+
+---
+
+# 🚀 Running Locally
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/satyamshrestha/TalentForge.git
 cd TalentForge
-Environment
+```
 
-Create:
+## 2. Configure Environment Variables
 
-.env
+Create a local `.env` file based on `.env.example`.
 
-from:
+```bash
+cp .env.example .env
+```
 
-.env.example
-Start Services
+Configure the required database, Redis, authentication, OAuth, and AI settings.
+
+For local AI processing, TalentForge currently uses Ollama.
+
+## 3. Start the Development Environment
+
+```bash
 docker compose up -d
-Database Migration
+```
+
+## 4. Apply Database Migrations
+
+```bash
 docker compose exec api alembic upgrade head
-API
+```
+
+## 5. Access the API
+
+API:
+
+```text
 http://localhost:8000
+```
 
-Swagger:
+Swagger documentation:
 
+```text
 http://localhost:8000/docs
-🎯 Engineering Principles
+```
 
-TalentForge is built around:
+---
 
-Separation of Concerns
+# 🎯 Engineering Principles
 
-Each layer owns a specific responsibility.
+TalentForge is built around several engineering principles.
 
-Dependency Injection
+### Separation of Concerns
 
-Components remain loosely coupled and testable.
+Each application layer owns a specific responsibility.
 
-Repository Pattern
+### Dependency Injection
 
-Database logic is separated from business logic.
+Components are constructed and injected independently, improving testability and reducing coupling.
 
-Service Layer
+### Repository Pattern
 
-Business rules remain outside API routes.
+Database access is separated from business logic.
 
-Async Architecture
+### Service Layer
 
-Heavy workloads are processed asynchronously.
+Business rules remain outside API route handlers.
 
-Provider Abstraction
+### Asynchronous Architecture
 
-AI systems can evolve without rewriting application logic.
+Long-running workloads are delegated to background workers.
 
-Production Thinking
+### Provider Abstraction
 
-Focus is placed on reliability, maintainability, security, and scalability.
+AI services depend on an abstraction layer rather than directly coupling business logic to a specific AI provider.
 
-🧭 Future Direction
+### Centralized Exception Handling
 
-TalentForge continues evolving toward a production-grade backend system.
+Application-specific exceptions provide consistent error handling across the system.
 
-Planned improvements:
+### Production Thinking
 
-Advanced observability
-Kubernetes deployment
-Distributed system patterns
-More AI providers
-Advanced system design improvements
-Performance optimization
-👨‍💻 Author
+The project emphasizes:
 
-Satyam Shrestha
+* Reliability
+* Maintainability
+* Security
+* Observability
+* Scalability
+* Testability
+* Deployment practices
+
+---
+
+# 🧭 Project Direction
+
+TalentForge is being developed as a long-term backend engineering project.
+
+The focus is on progressively improving the system through:
+
+* Advanced observability
+* Production deployment
+* Distributed-system patterns
+* Performance optimization
+* System design
+* Scalability improvements
+* Additional AI provider support
+* Infrastructure improvements
+
+The project prioritizes **engineering depth over continuously adding features**.
+
+---
+
+# 👨‍💻 Author
+
+**Satyam Shrestha**
 
 AI Computer Engineering Student
+Far East University
 
-Building TalentForge as a long-term backend engineering project focused on learning and demonstrating how production systems are designed.
+Building TalentForge as a long-term backend engineering project focused on learning and demonstrating how production-style backend systems are designed, built, tested, and deployed.
