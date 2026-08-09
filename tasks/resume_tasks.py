@@ -11,7 +11,7 @@ from exceptions.ai_exception import AIProviderException
 
 @celery.task(
     bind=True,
-    max_retries=3
+    max_retries=3,
 )
 def process_resume(self, id: str):
     db = SessionLocal()
@@ -58,24 +58,24 @@ def process_resume(self, id: str):
 
         redis_client.delete(cache_key)
 
-    except AIProviderException as e:
+    except AIProviderException as exc:
         db.rollback()
 
-        if self.request.retries >= self.max_retries:
-            if resume:
-                resume.status = "FAILED"
-                resume.error_message = str(e)
-                db.commit()
+        if self.request.retries < self.max_retries:
+            raise self.retry(
+                exc=exc,
+                countdown=2 ** self.request.retries * 10,
+            )
 
-                cache_key = f"user:{resume.user_id}:resumes"
-                redis_client.delete(cache_key)
+        if resume:
+            resume.status = "FAILED"
+            resume.error_message = str(exc)
+            db.commit()
 
-            raise
+            cache_key = f"user:{resume.user_id}:resumes"
+            redis_client.delete(cache_key)
 
-        raise self.retry(
-            exc=e,
-            countdown=10
-        )
+        raise
 
     except Exception as e:
         db.rollback()
