@@ -3,10 +3,10 @@ from pypdf import PdfReader
 from ai.services.resume_analyzer import ResumeAnalyzer
 from db.database import SessionLocal
 from db.redis import redis_client
+from exceptions.ai_exception import AIProviderException
 from models.resume import Resume
 from services.resume_parser import ResumeParser
 from tasks.celery_app import celery
-from exceptions.ai_exception import AIProviderException
 
 
 @celery.task(
@@ -15,8 +15,10 @@ from exceptions.ai_exception import AIProviderException
 )
 def process_resume(self, id: str):
     db = SessionLocal()
+
     parser = ResumeParser()
     analyzer = ResumeAnalyzer()
+
     resume = None
 
     try:
@@ -29,6 +31,10 @@ def process_resume(self, id: str):
         if not resume:
             return
 
+        # Idempotency guard:
+        # A completed resume does not need to be processed again.
+        if resume.status == "COMPLETED":
+            return
         cache_key = f"user:{resume.user_id}:resumes"
 
         resume.status = "PROCESSING"
