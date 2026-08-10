@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
 
 
 class Settings(BaseSettings):
@@ -8,6 +9,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
     TESTING: bool = False
+    APP_NAME: str = "TalentForge API"
+    APP_VERSION: str = "1.0.0"
+
     ALLOWED_HOSTS: list[str] = [
         "localhost",
         "127.0.0.1",
@@ -16,12 +20,19 @@ class Settings(BaseSettings):
         "api",
         "prometheus",
     ]
-    APP_NAME: str = "TalentForge API"
-    APP_VERSION: str = "1.0.0"
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
     ]
+
+    LOG_LEVEL: Literal[
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+    ] = "INFO"
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
@@ -32,13 +43,13 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads/resumes"
     MAX_RESUME_SIZE: int = 5 * 1024 * 1024
 
-    # Future AI Configuration
+    # Optional AI Providers
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     GOOGLE_AI_API_KEY: str = ""
 
     # AI Configuration
-    LLM_PROVIDER: str = "ollama"
+    LLM_PROVIDER: Literal["ollama", "openai"] = "ollama"
     LLM_MODEL: str = "llama3.2:3b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_TIMEOUT: int = 300
@@ -48,7 +59,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        extra="ignore"
+        extra="ignore",
     )
 
 settings = Settings()
