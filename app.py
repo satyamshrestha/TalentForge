@@ -2,7 +2,7 @@ import logging
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
@@ -113,6 +113,36 @@ async def app_exception_handler(
         status_code=exc.status_code,
         content={
             "detail": exc.detail,
+        },
+    )
+
+@app.exception_handler(Exception)
+async def unexpected_exception_handler(
+    request: Request,
+    exc: Exception,
+):
+    request_id = getattr(
+        request.state,
+        "request_id",
+        "-",
+    )
+
+    logger.exception(
+        "Unhandled application exception | "
+        "method=%s | "
+        "path=%s | "
+        "request_id=%s",
+        request.method,
+        request.url.path,
+        request_id,
+        exc_info=exc,
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal server error",
+            "request_id": request_id,
         },
     )
 
