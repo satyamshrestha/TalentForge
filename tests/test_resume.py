@@ -7,11 +7,11 @@ from app import app
 client = TestClient(app)
 
 
-@patch("services.resume_service.redis_client.delete")
+@patch("services.resume_service.cache_delete")
 @patch("services.resume_service.process_resume.delay")
 def test_upload_resume(
     mock_delay,
-    mock_redis_delete
+    mock_cache_delete
 ):
     client.post(
         "/api/v1/auth/signup",
@@ -53,13 +53,13 @@ def test_upload_resume(
     assert data["user_id"] is not None
 
     mock_delay.assert_called_once()
-    mock_redis_delete.assert_called_once()
+    mock_cache_delete.assert_called_once()
 
-@patch("services.resume_service.redis_client.delete")
+@patch("services.resume_service.cache_delete")
 @patch("services.resume_service.process_resume.delay")
 def test_upload_invalid_resume(
     mock_delay,
-    mock_redis_delete
+    mock_cache_delete
 ):
     client.post(
         "/api/v1/auth/signup",
@@ -97,7 +97,7 @@ def test_upload_invalid_resume(
     assert response.json()["detail"] == "Only PDF files are allowed."
 
     mock_delay.assert_not_called()
-    mock_redis_delete.assert_not_called()
+    mock_cache_delete.assert_not_called()
 
 def test_get_resume_not_found():
     client.post(
@@ -128,17 +128,17 @@ def test_get_resume_not_found():
     assert response.status_code == 404
     assert response.json()["detail"] == "Resume does not exist!"
 
-@patch("services.resume_service.redis_client.delete")
-@patch("services.resume_service.redis_client.set")
-@patch("services.resume_service.redis_client.get")
+@patch("services.resume_service.cache_delete")
+@patch("services.resume_service.cache_set")
+@patch("services.resume_service.cache_get")
 @patch("services.resume_service.process_resume.delay")
 def test_get_my_resumes_contains_parsed_text(
     mock_delay,
-    mock_redis_get,
-    mock_redis_set,
-    mock_redis_delete
+    mock_cache_get,
+    mock_cache_set,
+    mock_cache_delete
 ):
-    mock_redis_get.return_value = None
+    mock_cache_get.return_value = None
 
     client.post(
         "/api/v1/auth/signup",
@@ -193,3 +193,8 @@ def test_get_my_resumes_contains_parsed_text(
     assert "file_path" in resume
     assert "status" in resume
     assert "parsed_text" in resume
+
+    mock_cache_get.assert_called_once()
+    mock_cache_set.assert_called_once()
+    mock_delay.assert_called_once()
+    mock_cache_delete.assert_called_once()

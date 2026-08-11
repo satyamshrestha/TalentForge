@@ -14,7 +14,7 @@ from tests.conftest import TestingSessionLocal
 client = TestClient(app)
 
 
-@patch("services.resume_service.redis_client.delete")
+@patch("services.resume_service.cache_delete")
 @patch("services.resume_service.process_resume.delay")
 def test_create_interview_from_processing_resume(
     mock_delay,

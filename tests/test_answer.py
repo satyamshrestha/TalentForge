@@ -29,6 +29,8 @@ class FakeAnswerService:
 
 def test_submit_answer():
 
+    original_override = app.dependency_overrides.get(get_answer_service)
+
     app.dependency_overrides[get_answer_service] = lambda: FakeAnswerService()
 
     try:
@@ -97,5 +99,9 @@ def test_submit_answer():
         assert data["feedback"] is not None
         assert data["score"] is not None
 
+
     finally:
-        app.dependency_overrides.clear()
+        if original_override is not None:
+            app.dependency_overrides[get_answer_service] = original_override
+        else:
+            app.dependency_overrides.pop(get_answer_service, None)
