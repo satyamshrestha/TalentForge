@@ -2,7 +2,6 @@ import json, uuid, os
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 
-from db.redis import redis_client
 from models.user import User
 from models.resume import Resume
 from exceptions.resume_exception import (
@@ -16,6 +15,11 @@ from tasks.resume_tasks import process_resume
 from repositories.resume_repository import ResumeRepository
 from utils.config import settings
 from utils.file_validation import is_pdf
+from utils.cache import (
+    cache_get,
+    cache_set,
+    cache_delete,
+)
 
 class ResumeService:
     def __init__(
@@ -65,7 +69,7 @@ class ResumeService:
 
         resume = self.repository.create_resume(db, resume)
         cache_key = self._get_resume_cache_key(current_user.id)
-        redis_client.delete(cache_key)
+        cache_delete(cache_key)
         process_resume.delay(resume.id)
         return resume
     
@@ -75,7 +79,7 @@ class ResumeService:
         current_user: User
     ):
         cache_key = self._get_resume_cache_key(current_user.id)
-        cached = redis_client.get(cache_key)
+        cached = cache_get(cache_key)
         if cached is not None:
             return json.loads(cached)
         resumes = self.repository.get_all_resumes_by_user(db, current_user.id)
@@ -90,10 +94,10 @@ class ResumeService:
             }
             for resume in resumes
         ]
-        redis_client.set(
+        cache_set(
             cache_key,
             json.dumps(resume_data),
-            ex=300
+            ttl=300
         )
         return resume_data
 
@@ -116,7 +120,7 @@ class ResumeService:
             os.remove(resume.file_path)
         self.repository.delete_resume(db, resume)
         cache_key = self._get_resume_cache_key(current_user.id)
-        redis_client.delete(cache_key)       
+        cache_delete(cache_key)       
         return True
 
     def _get_owned_resume(
