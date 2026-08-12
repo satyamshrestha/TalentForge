@@ -51,6 +51,7 @@ def test_upload_resume(
 
     assert data["status"] == "PENDING"
     assert data["user_id"] is not None
+    assert data["file_path"] is not None
 
     mock_delay.assert_called_once()
     mock_cache_delete.assert_called_once()
