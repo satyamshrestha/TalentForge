@@ -7,7 +7,7 @@ from db.redis import redis_client
 logger = logging.getLogger("talentforge.cache")
 
 
-def cache_get(key: str):
+def cache_get(key: str) -> None:
     try:
         return redis_client.get(key)
     except RedisError:
@@ -22,7 +22,7 @@ def cache_set(
     key: str,
     value: str,
     ttl: int,
-):
+) -> None:
     try:
         redis_client.set(
             key,
