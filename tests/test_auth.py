@@ -87,6 +87,7 @@ def test_login_wrong_password():
     )
 
     assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials!"
 
 
 def test_me_endpoint():
