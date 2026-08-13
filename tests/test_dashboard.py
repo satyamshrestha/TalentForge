@@ -30,3 +30,10 @@ def test_dashboard():
     )
 
     assert response.status_code == 200
+    data = response.json()
+
+    assert "total_resumes" in data
+    assert "total_interviews" in data
+    assert "completed_interviews" in data
+    assert "average_interview_score" in data
+    assert "recent_interviews" in data
