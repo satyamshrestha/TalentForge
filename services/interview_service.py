@@ -221,7 +221,7 @@ class InterviewService:
         scores = [
             int(question.answer.score)
             for question in interview.questions
-            if question.answer
+            if question.answer and question.answer.score is not None
         ]
         average_score = (
             sum(scores)/len(scores)
