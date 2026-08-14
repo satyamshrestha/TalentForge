@@ -1,5 +1,8 @@
+import uuid
 from io import BytesIO
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app import app
@@ -7,30 +10,44 @@ from app import app
 client = TestClient(app)
 
 
-@patch("services.resume_service.cache_delete")
-@patch("services.resume_service.process_resume.delay")
-def test_upload_resume(
-    mock_delay,
-    mock_cache_delete
-):
-    client.post(
+@pytest.fixture
+def auth_headers():
+    email = f"resume_{uuid.uuid4()}@example.com"
+
+    signup = client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "resume@example.com",
+            "email": email,
             "password": "password123"
         }
     )
+
+    assert signup.status_code == 201
 
     login = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "resume@example.com",
+            "username": email,
             "password": "password123"
         }
     )
 
+    assert login.status_code == 200
+
     token = login.json()["access_token"]
 
+    return {
+        "Authorization": f"Bearer {token}"
+    }
+
+
+@patch("services.resume_service.cache_delete")
+@patch("services.resume_service.process_resume.delay")
+def test_upload_resume(
+    mock_delay,
+    mock_cache_delete,
+    auth_headers
+):
     response = client.post(
         "/api/v1/resumes/upload",
         files={
@@ -40,9 +57,7 @@ def test_upload_resume(
                 "application/pdf"
             )
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -56,30 +71,14 @@ def test_upload_resume(
     mock_delay.assert_called_once()
     mock_cache_delete.assert_called_once()
 
+
 @patch("services.resume_service.cache_delete")
 @patch("services.resume_service.process_resume.delay")
 def test_upload_invalid_resume(
     mock_delay,
-    mock_cache_delete
+    mock_cache_delete,
+    auth_headers
 ):
-    client.post(
-        "/api/v1/auth/signup",
-        json={
-            "email": "invalid@example.com",
-            "password": "password123"
-        }
-    )
-
-    login = client.post(
-        "/api/v1/auth/login",
-        data={
-            "username": "invalid@example.com",
-            "password": "password123"
-        }
-    )
-
-    token = login.json()["access_token"]
-
     response = client.post(
         "/api/v1/resumes/upload",
         files={
@@ -89,9 +88,7 @@ def test_upload_invalid_resume(
                 "text/plain"
             )
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=auth_headers
     )
 
     assert response.status_code == 400
@@ -100,34 +97,16 @@ def test_upload_invalid_resume(
     mock_delay.assert_not_called()
     mock_cache_delete.assert_not_called()
 
-def test_get_resume_not_found():
-    client.post(
-        "/api/v1/auth/signup",
-        json={
-            "email": "resume404@example.com",
-            "password": "password123"
-        }
-    )
 
-    login = client.post(
-        "/api/v1/auth/login",
-        data={
-            "username": "resume404@example.com",
-            "password": "password123"
-        }
-    )
-
-    token = login.json()["access_token"]
-
+def test_get_resume_not_found(auth_headers):
     response = client.get(
         "/api/v1/resumes/non-existent-id",
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=auth_headers
     )
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Resume does not exist!"
+
 
 @patch("services.resume_service.cache_delete")
 @patch("services.resume_service.cache_set")
@@ -137,27 +116,10 @@ def test_get_my_resumes_contains_parsed_text(
     mock_delay,
     mock_cache_get,
     mock_cache_set,
-    mock_cache_delete
+    mock_cache_delete,
+    auth_headers
 ):
     mock_cache_get.return_value = None
-
-    client.post(
-        "/api/v1/auth/signup",
-        json={
-            "email": "resume_me@example.com",
-            "password": "password123"
-        }
-    )
-
-    login = client.post(
-        "/api/v1/auth/login",
-        data={
-            "username": "resume_me@example.com",
-            "password": "password123"
-        }
-    )
-
-    token = login.json()["access_token"]
 
     upload_response = client.post(
         "/api/v1/resumes/upload",
@@ -168,18 +130,14 @@ def test_get_my_resumes_contains_parsed_text(
                 "application/pdf"
             )
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=auth_headers
     )
 
     assert upload_response.status_code == 200
 
     response = client.get(
         "/api/v1/resumes/me",
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=auth_headers
     )
 
     assert response.status_code == 200
