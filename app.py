@@ -106,7 +106,7 @@ app.include_router(
 
 @app.exception_handler(AppException)
 async def app_exception_handler(
-    request,
+    request: Request,
     exc: AppException,
 ):
     return JSONResponse(
