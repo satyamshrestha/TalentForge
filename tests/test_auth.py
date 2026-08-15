@@ -1,11 +1,14 @@
 import uuid
-from fastapi.testclient import TestClient
-from app import app
 
+from fastapi.testclient import TestClient
+
+from app import app
 from models.user import User
 from tests.conftest import TestingSessionLocal
 
+
 client = TestClient(app)
+
 
 def test_signup():
     response = client.post(
@@ -17,6 +20,7 @@ def test_signup():
     )
 
     assert response.status_code == 201
+
     data = response.json()
 
     assert data["email"] == "test@example.com"
@@ -64,8 +68,8 @@ def test_login():
 
     data = response.json()
 
-    assert "access_token" in data
-    assert "refresh_token" in data
+    assert data["access_token"]
+    assert data["refresh_token"]
     assert data["token_type"] == "bearer"
 
 
@@ -115,6 +119,7 @@ def test_me_endpoint():
             "Authorization": f"Bearer {token}"
         }
     )
+
     assert response.status_code == 200
     assert response.json()["Email"] == "me@example.com"
     assert response.json()["Role"] == "student"
@@ -124,6 +129,7 @@ def test_me_without_token():
     response = client.get("/api/v1/auth/me")
 
     assert response.status_code == 401
+
 
 def test_refresh_token():
     client.post(
@@ -155,8 +161,9 @@ def test_refresh_token():
 
     data = response.json()
 
-    assert "access_token" in data
+    assert data["access_token"]
     assert data["token_type"] == "bearer"
+
 
 def test_google_user_cannot_login_with_password():
     db = TestingSessionLocal()
