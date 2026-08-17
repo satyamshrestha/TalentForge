@@ -1,12 +1,17 @@
 # TalentForge Architecture
 
-TalentForge is designed as a production-style backend system with clear separation between API handling, business logic, data access, asynchronous processing, AI services, and infrastructure.
 
-The architecture is designed to keep individual responsibilities isolated while allowing the system to evolve without tightly coupling the application to a specific database, task queue, or AI provider.
+TalentForge is designed as a production-style backend system with clear separation between API handling, business logic, data access, asynchronous processing, AI services, real-time communication, and infrastructure.
+
+
+The architecture is designed to keep individual responsibilities isolated while allowing the system to evolve without tightly coupling the application to a specific database, task queue, AI provider, or communication protocol.
+
 
 ---
 
-## 1. High-Level Architecture
+
+# 1. High-Level Architecture
+
 
 ```text
                          Client
@@ -23,12 +28,15 @@ The architecture is designed to keep individual responsibilities isolated while 
                     │ Application │
                     └──────┬──────┘
                            │
-                           ▼
-                    ┌─────────────┐
-                    │   Routers   │
-                    │  API Layer  │
-                    └──────┬──────┘
-                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+       ┌─────────────┐           ┌─────────────┐
+       │   Routers   │           │  WebSocket  │
+       │  REST API   │           │   Layer     │
+       └──────┬──────┘           └──────┬──────┘
+              │                         │
+              └────────────┬────────────┘
                            ▼
                     ┌─────────────┐
                     │  Services   │
@@ -46,11 +54,9 @@ The architecture is designed to keep individual responsibilities isolated while 
                     │ PostgreSQL  │
                     │  Database   │
                     └─────────────┘
-```
 
-Supporting infrastructure operates alongside the main request path:
+Supporting infrastructure operates alongside the main application:
 
-```text
                          TalentForge
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -66,15 +72,31 @@ Supporting infrastructure operates alongside the main request path:
                               │
                               ▼
                          PostgreSQL
-```
 
----
+Real-time communication operates alongside the traditional REST API:
 
-# 2. Architectural Layers
+Client
+  │
+  ├────────────── HTTP ──────────────► REST API
+  │                                      │
+  │                                      ▼
+  │                                   Services
+  │
+  └──────────── WebSocket ──────────► WebSocket Layer
+                                         │
+                                         ▼
+                                      Services
+                                         │
+                                         ▼
+                                    Application
+                                     Events
+
+This separation allows synchronous API requests and real-time communication to coexist without coupling WebSocket handling to individual REST endpoints.
+
+2. Architectural Layers
 
 TalentForge follows a layered architecture.
 
-```text
 Routers
    │
    ▼
@@ -85,29 +107,43 @@ Repositories
    │
    ▼
 Database
-```
+
+Real-time communication follows a parallel application entry point:
+
+WebSocket
+   │
+   ▼
+WebSocket Layer
+   │
+   ▼
+Services
+   │
+   ▼
+Repositories
+   │
+   ▼
+Database
 
 Each layer has a specific responsibility.
 
-## Routers
+Routers
 
 Routers are responsible for HTTP-level concerns.
 
 They handle:
 
-* Request parsing
-* Response serialization
-* Dependency injection
-* Authentication dependencies
-* Authorization dependencies
-* HTTP status codes
-* Calling application services
+Request parsing
+Response serialization
+Dependency injection
+Authentication dependencies
+Authorization dependencies
+HTTP status codes
+Calling application services
 
 Routers should not contain substantial business logic.
 
 Example:
 
-```text
 POST /interviews
        │
        ▼
@@ -115,46 +151,74 @@ Interview Router
        │
        ▼
 Interview Service
-```
+WebSocket Layer
 
----
+The WebSocket layer handles persistent real-time connections between clients and the application.
 
-## Services
+It is responsible for:
+
+Accepting WebSocket connections
+Authenticating connections
+Managing connection lifecycle
+Receiving client messages
+Sending real-time events
+Disconnect handling
+Connection management
+Delegating application behavior to services
+
+The WebSocket layer should not contain substantial business logic.
+
+Example:
+
+Client
+  │
+  │ WebSocket Connection
+  ▼
+WebSocket Endpoint
+  │
+  ▼
+Connection Manager
+  │
+  ▼
+Application Service
+  │
+  ▼
+Business Logic
+
+This keeps real-time transport concerns separate from the application's business rules.
+
+Services
 
 Services contain the application's business logic.
 
 Examples include:
 
-```text
 UserService
 ResumeService
 InterviewService
 AnswerService
 DashboardService
 AuditLogService
-```
 
 Services are responsible for operations such as:
 
-* Validating business rules
-* Coordinating repositories
-* Managing application workflows
-* Calling AI services
-* Triggering background tasks
-* Managing cache invalidation
-* Recording audit events
+Validating business rules
+Coordinating repositories
+Managing application workflows
+Calling AI services
+Triggering background tasks
+Managing cache invalidation
+Recording audit events
+Coordinating real-time application events
 
-This keeps business logic independent from the HTTP layer.
+This keeps business logic independent from the HTTP and WebSocket transport layers.
 
----
-
-## Repositories
+Repositories
 
 Repositories provide the database access layer.
 
 Examples include:
 
-```text
 UserRepository
 ResumeRepository
 InterviewRepository
@@ -162,25 +226,21 @@ QuestionRepository
 AnswerRepository
 AuditLogRepository
 DashboardRepository
-```
 
 Repositories are responsible for:
 
-* Creating records
-* Retrieving records
-* Updating records
-* Deleting records
-* Querying PostgreSQL
+Creating records
+Retrieving records
+Updating records
+Deleting records
+Querying PostgreSQL
 
 The service layer therefore does not need to contain raw database operations throughout its business logic.
 
----
-
-# 3. Request Flow
+3. Request Flow
 
 A typical synchronous API request follows this path:
 
-```text
 Client
   │
   ▼
@@ -212,11 +272,9 @@ Router
   │
   ▼
 Client
-```
 
 For example, retrieving a user's resumes:
 
-```text
 GET /resumes
      │
      ▼
@@ -230,19 +288,15 @@ Resume Repository
      │
      ▼
 PostgreSQL
-```
 
 Redis may intercept this flow when cached data is available.
 
----
-
-# 4. Redis Cache Architecture
+4. Redis Cache Architecture
 
 TalentForge uses Redis as a caching layer.
 
 The application follows a cache-aside strategy.
 
-```text
                   Request
                      │
                      ▼
@@ -258,25 +312,19 @@ The application follows a cache-aside strategy.
                            │
                            ▼
                       Return Data
-```
 
 Resume retrieval uses cache keys based on the user:
 
-```text
 user:{user_id}:resumes
-```
 
 The current cache TTL is:
 
-```text
 300 seconds
-```
 
 Cache invalidation occurs when relevant resume data changes.
 
 Examples:
 
-```text
 Resume Upload
      │
      ▼
@@ -284,9 +332,6 @@ Database Update
      │
      ▼
 Invalidate Resume Cache
-```
-
-```text
 Resume Delete
      │
      ▼
@@ -294,21 +339,17 @@ Database Delete
      │
      ▼
 Invalidate Resume Cache
-```
 
 Redis is therefore used as a performance optimization rather than the source of truth.
 
 PostgreSQL remains the authoritative persistent data store.
 
----
-
-# 5. Celery Background Processing
+5. Celery Background Processing
 
 Long-running operations are separated from the API request-response cycle.
 
 Resume processing is handled asynchronously using Celery.
 
-```text
 Client
   │
   ▼
@@ -341,21 +382,17 @@ FastAPI
               │
               ▼
        status = COMPLETED
-```
 
 The API does not wait for the entire resume-processing pipeline to finish.
 
 This prevents expensive processing from blocking normal API requests.
 
----
-
-# 6. AI Architecture
+6. AI Architecture
 
 AI functionality is separated from the application's core business logic.
 
 The architecture is:
 
-```text
 Application Service
        │
        ▼
@@ -372,27 +409,21 @@ AI Provider
        │
        ▼
      LLM Model
-```
 
 Current AI services include:
 
-```text
 ResumeAnalyzer
 QuestionGenerator
 AnswerEvaluator
-```
 
 These services are responsible for AI-specific workflows while the provider layer handles communication with the configured model backend.
 
----
-
-# 7. AI Provider Abstraction
+7. AI Provider Abstraction
 
 TalentForge does not tightly couple its business logic to Ollama.
 
 Instead, AI services depend on the provider abstraction.
 
-```text
                  AI Service
                      │
                      ▼
@@ -406,33 +437,24 @@ Instead, AI services depend on the provider abstraction.
                      │
                      ▼
                    Ollama
-```
 
 The currently active provider is:
 
-```text
 Ollama
-```
 
 Ollama is used as the primary model backend for the current system.
 
-An OpenAI provider exists in the codebase as a placeholder for future integration and is **not the current production AI backend**.
+An OpenAI provider exists in the codebase as a placeholder for future integration and is not the current production AI backend.
 
 This architecture allows additional providers to be introduced without rewriting the business logic inside:
 
-```text
 ResumeAnalyzer
 QuestionGenerator
 AnswerEvaluator
-```
-
----
-
-# 8. Resume Processing Architecture
+8. Resume Processing Architecture
 
 Resume processing combines synchronous API operations, asynchronous tasks, parsing, and AI analysis.
 
-```text
                   PDF Upload
                       │
                       ▼
@@ -477,23 +499,17 @@ Resume processing combines synchronous API operations, asynchronous tasks, parsi
                       │
                       ▼
                  COMPLETED
-```
 
 If processing fails, the resume is marked:
 
-```text
 FAILED
-```
 
 and the associated error information is stored with the resume.
 
----
-
-# 9. Interview Architecture
+9. Interview Architecture
 
 Interview creation is based on processed resume information.
 
-```text
 Completed Resume
        │
        ▼
@@ -513,11 +529,9 @@ Question Repository
        │
        ▼
 Interview
-```
 
 The domain relationship is:
 
-```text
 User
  │
  ├── Resume
@@ -527,17 +541,13 @@ User
        └── Question
               │
               └── Answer
-```
 
 This allows interviews, questions, and answers to remain independently persisted while maintaining their relationships.
 
----
-
-# 10. Answer Evaluation Architecture
+10. Answer Evaluation Architecture
 
 Answer evaluation is performed through the AI service layer.
 
-```text
 Question + Answer
        │
        ▼
@@ -560,25 +570,19 @@ Answer Repository
        │
        ▼
 PostgreSQL
-```
 
 The evaluation contains information such as:
 
-```text
 Feedback
 Score
 Suggested Improvement
-```
 
 Business rules such as preventing a question from being answered multiple times remain inside the application service layer.
 
----
-
-# 11. Authentication and Authorization
+11. Authentication and Authorization
 
 Authentication and authorization are separated into dedicated components.
 
-```text
 Client
   │
   ▼
@@ -602,30 +606,28 @@ Authorization
   │
   ▼
 Protected Resource
-```
 
 TalentForge uses:
 
-* JWT access tokens
-* JWT refresh tokens
-* Password hashing
-* OAuth2 password flow
-* Google OAuth
-* Role-based access control
-* Scope-based authorization
-* Ownership validation
+JWT access tokens
+JWT refresh tokens
+Password hashing
+OAuth2 password flow
+Google OAuth
+Role-based access control
+Scope-based authorization
+Ownership validation
 
 Authorization decisions can therefore consider both the user's role and their granted scopes.
 
----
+WebSocket connections use the same authentication and authorization principles where applicable.
 
-# 12. Database Architecture
+12. Database Architecture
 
 PostgreSQL is the primary persistent data store.
 
 The core domain model is:
 
-```text
 User
  │
  ├───────────────┐
@@ -638,27 +640,21 @@ Resume         Interview
                   │
                   ▼
                 Answer
-```
 
 Audit logging is associated with users and application entities:
 
-```text
 User
  │
  └── AuditLog
-```
 
 SQLAlchemy is used as the ORM and Alembic manages database schema migrations.
 
----
-
-# 13. Middleware Architecture
+13. Middleware Architecture
 
 Cross-cutting application concerns are handled through middleware and dedicated utilities.
 
 Current middleware responsibilities include:
 
-```text
 Request
   │
   ▼
@@ -675,28 +671,130 @@ Trusted Host
   │
   ▼
 FastAPI Application
-```
 
 Other cross-cutting concerns include:
 
-* CORS
-* Rate limiting
-* Request logging
-* Security headers
-* Metrics collection
-* Trusted host validation
+CORS
+Rate limiting
+Request logging
+Security headers
+Metrics collection
+Trusted host validation
 
 These concerns remain outside individual business services.
 
----
+14. WebSocket Architecture
 
-# 14. Exception Architecture
+TalentForge supports WebSocket-based real-time communication for interactive application workflows.
+
+The WebSocket architecture is intentionally separated from the REST API layer.
+
+Client
+  │
+  │ WebSocket
+  ▼
+Nginx
+  │
+  ▼
+FastAPI
+  │
+  ▼
+WebSocket Endpoint
+  │
+  ▼
+Connection Manager
+  │
+  ▼
+Application Service
+  │
+  ├───────────────┐
+  ▼               ▼
+PostgreSQL       Redis
+
+The WebSocket layer is responsible for connection lifecycle management rather than business logic.
+
+Connection
+     │
+     ▼
+Authentication
+     │
+     ▼
+Accept Connection
+     │
+     ▼
+Register Connection
+     │
+     ▼
+Receive / Send Events
+     │
+     ▼
+Disconnect
+     │
+     ▼
+Remove Connection
+
+A connection manager maintains active connections.
+
+Conceptually:
+
+Connection Manager
+       │
+       ├── User A ─── WebSocket
+       ├── User B ─── WebSocket
+       └── User C ─── WebSocket
+
+This provides a centralized location for:
+
+Connection registration
+Connection removal
+Sending messages to individual clients
+Broadcasting events
+Handling disconnects
+Real-Time Interview Updates
+
+WebSockets are particularly useful for real-time interview workflows.
+
+For example:
+
+Interview Processing
+       │
+       ▼
+Application Event
+       │
+       ▼
+WebSocket Layer
+       │
+       ▼
+Connected Client
+
+A client can receive events such as:
+
+INTERVIEW_STARTED
+QUESTION_AVAILABLE
+ANSWER_SUBMITTED
+ANSWER_EVALUATED
+INTERVIEW_COMPLETED
+
+The exact event types can evolve independently from the WebSocket transport.
+
+REST vs WebSocket
+
+TalentForge uses both communication models for different responsibilities.
+
+Communication	Purpose
+REST	CRUD operations and request/response workflows
+WebSocket	Real-time events and live application updates
+Celery	Long-running asynchronous processing
+Redis	Caching and infrastructure support
+
+This prevents WebSockets from being used where ordinary REST requests are more appropriate.
+
+15. Exception Architecture
 
 TalentForge uses application-specific exceptions.
 
 The general hierarchy is:
 
-```text
 AppException
      │
      ├── User Exceptions
@@ -705,11 +803,9 @@ AppException
      ├── Question Exceptions
      ├── Answer Exceptions
      └── AI Exceptions
-```
 
 Examples include:
 
-```text
 UserAlreadyExistsException
 InvalidCredentialsException
 ResumeNotFoundException
@@ -717,19 +813,15 @@ ResumeAccessDeniedException
 InterviewNotFoundException
 QuestionAlreadyAnsweredException
 AIProviderException
-```
 
 Exceptions are handled centrally rather than scattering HTTP error handling throughout the service layer.
 
 This keeps business logic focused on application behavior.
 
----
-
-# 15. Observability Architecture
+16. Observability Architecture
 
 TalentForge includes an observability stack for application monitoring.
 
-```text
 TalentForge
      │
      ▼
@@ -740,7 +832,6 @@ Prometheus
      │
      ▼
 Grafana
-```
 
 The application exposes metrics through the metrics subsystem.
 
@@ -748,7 +839,6 @@ Prometheus collects those metrics and Grafana provides visualization dashboards.
 
 This separates:
 
-```text
 Application
     ↓
 Metrics Collection
@@ -756,19 +846,17 @@ Metrics Collection
 Metrics Storage
     ↓
 Visualization
-```
 
 from the application's core business logic.
 
----
+WebSocket connections and real-time activity can also be monitored through application metrics and structured logging.
 
-# 16. Production Infrastructure
+17. Production Infrastructure
 
 The production deployment uses Docker Compose.
 
 The major services are:
 
-```text
 ┌──────────────────────────────────────────┐
 │                Nginx                     │
 │          Reverse Proxy / Entry           │
@@ -777,7 +865,7 @@ The major services are:
                    ▼
 ┌──────────────────────────────────────────┐
 │               FastAPI                    │
-│                 API                      │
+│        REST API + WebSocket Layer        │
 └───────────────┬───────────┬──────────────┘
                 │           │
                 ▼           ▼
@@ -790,11 +878,9 @@ The major services are:
                                         │
                                         ▼
                                   Persistent Data
-```
 
 Monitoring operates alongside the application:
 
-```text
 FastAPI
    │
    ▼
@@ -802,19 +888,17 @@ Prometheus
    │
    ▼
 Grafana
-```
+
+Nginx is responsible for the external entry point and reverse proxying of both HTTP and WebSocket traffic.
 
 Docker provides consistent environments across development and deployment.
 
----
-
-# 17. CI/CD Architecture
+18. CI/CD Architecture
 
 GitHub Actions is used to validate changes automatically.
 
 The general pipeline is:
 
-```text
 Push / Pull Request
         │
         ▼
@@ -831,19 +915,15 @@ Build Docker Image
         │
         ▼
 Push Image
-```
 
 The pipeline provides an automated quality gate before a new application image is published.
 
----
-
-# 18. Dependency Flow
+19. Dependency Flow
 
 A major architectural principle is controlling dependency direction.
 
-The intended flow is:
+The intended REST flow is:
 
-```text
 Router
   ↓
 Service
@@ -851,11 +931,19 @@ Service
 Repository
   ↓
 Database
-```
+
+The intended WebSocket flow is:
+
+WebSocket Layer
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Database
 
 AI-related dependencies follow a separate abstraction:
 
-```text
 Service
   ↓
 AI Service
@@ -865,67 +953,65 @@ Provider Abstraction
 Concrete Provider
   ↓
 Ollama
-```
 
-Infrastructure components such as Redis and Celery are accessed through their respective application integrations rather than being embedded directly into route handlers.
+Infrastructure components such as Redis and Celery are accessed through their respective application integrations rather than being embedded directly into route handlers or WebSocket handlers.
 
-This keeps the application modular and easier to test.
+This keeps transport concerns separate from business logic.
 
----
-
-# 19. Design Principles
+20. Design Principles
 
 TalentForge is built around the following principles.
 
-### Separation of Concerns
+Separation of Concerns
 
 Each layer has a clearly defined responsibility.
 
-### Dependency Injection
+Dependency Injection
 
 Dependencies are provided through FastAPI's dependency injection system rather than being tightly instantiated throughout route handlers.
 
-### Repository Pattern
+Repository Pattern
 
 Persistence logic is separated from business logic.
 
-### Service Layer
+Service Layer
 
-Business rules remain outside the HTTP layer.
+Business rules remain outside the HTTP and WebSocket transport layers.
 
-### Asynchronous Processing
+Asynchronous Processing
 
 Long-running operations are delegated to Celery workers.
 
-### Cache-Aside
+Real-Time Communication
+
+WebSockets are used for workflows that benefit from persistent, bidirectional communication and live updates.
+
+Cache-Aside
 
 Redis improves read performance without becoming the source of truth.
 
-### Provider Abstraction
+Provider Abstraction
 
 AI services are isolated from specific LLM implementations.
 
-### Centralized Exception Handling
+Centralized Exception Handling
 
 Application errors are represented through dedicated exception types.
 
-### Containerized Infrastructure
+Containerized Infrastructure
 
 Application and infrastructure services are reproducible through Docker.
 
-### Automated Validation
+Automated Validation
 
 Tests and Docker builds are integrated into CI/CD.
 
----
-
-# 20. Architectural Goal
+21. Architectural Goal
 
 TalentForge is intentionally structured as more than a conventional CRUD backend.
 
 The architecture is designed to demonstrate practical backend engineering concepts including:
 
-```text
 API Design
     ↓
 Layered Architecture
@@ -938,6 +1024,8 @@ Caching
     ↓
 Asynchronous Processing
     ↓
+Real-Time Communication
+    ↓
 AI Integration
     ↓
 Observability
@@ -945,6 +1033,5 @@ Observability
 Containerization
     ↓
 CI/CD
-```
 
 The goal is to evolve TalentForge as a maintainable, testable, observable, and deployable backend system while keeping the architecture understandable as the project grows.
