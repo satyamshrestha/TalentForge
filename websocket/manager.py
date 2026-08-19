@@ -1,18 +1,45 @@
+from collections import defaultdict
+
 from fastapi import WebSocket
 
 
 class ConnectionManager:
 
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: dict[
+            str,
+            list[WebSocket],
+        ] = defaultdict(list)
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(
+        self,
+        websocket: WebSocket,
+        interview_id: str,
+    ):
         await websocket.accept()
-        self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+        self.active_connections[
+            interview_id
+        ].append(websocket)
+
+    def disconnect(
+        self,
+        websocket: WebSocket,
+        interview_id: str,
+    ):
+        connections = self.active_connections.get(
+            interview_id,
+            [],
+        )
+
+        if websocket in connections:
+            connections.remove(websocket)
+
+        if not connections:
+            self.active_connections.pop(
+                interview_id,
+                None,
+            )
 
     async def send_personal_message(
         self,
@@ -21,6 +48,15 @@ class ConnectionManager:
     ):
         await websocket.send_text(message)
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
+    async def broadcast(
+        self,
+        message: str,
+        interview_id: str,
+    ):
+        connections = self.active_connections.get(
+            interview_id,
+            [],
+        )
+
+        for connection in connections:
             await connection.send_text(message)
