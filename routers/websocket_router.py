@@ -16,7 +16,10 @@ async def interview_websocket(
     websocket: WebSocket,
     interview_id: str,
 ):
-    await manager.connect(websocket)
+    await manager.connect(
+        websocket,
+        interview_id,
+    )
 
     try:
         while True:
@@ -28,4 +31,7 @@ async def interview_websocket(
             )
 
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(
+            websocket,
+            interview_id,
+        )
