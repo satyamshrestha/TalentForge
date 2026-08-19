@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
 
@@ -22,12 +23,24 @@ async def interview_websocket(
     )
 
     try:
+        await manager.broadcast_event(
+            WebSocketEvent.INTERVIEW_STARTED,
+            {
+                "interview_id": interview_id,
+            },
+            interview_id,
+        )
+
         while True:
             data = await websocket.receive_text()
 
-            await manager.send_personal_message(
-                data,
-                websocket,
+            await manager.broadcast_event(
+                WebSocketEvent.ANSWER_SUBMITTED,
+                {
+                    "interview_id": interview_id,
+                    "message": data,
+                },
+                interview_id,
             )
 
     except WebSocketDisconnect:

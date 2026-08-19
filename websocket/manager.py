@@ -60,3 +60,22 @@ class ConnectionManager:
 
         for connection in connections:
             await connection.send_text(message)
+
+    async def broadcast_event(
+        self,
+        event: str,
+        data: dict,
+        interview_id: str,
+    ):
+        message = {
+            "event": event,
+            "data": data,
+        }
+
+        connections = self.active_connections.get(
+            interview_id,
+            [],
+        )
+
+        for connection in connections:
+            await connection.send_json(message)

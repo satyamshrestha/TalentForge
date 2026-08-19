@@ -1,9 +1,8 @@
 from enum import Enum
 
-
 class WebSocketEvent(str, Enum):
-    INTERVIEW_STARTED = "INTERVIEW_STARTED"
-    QUESTION_AVAILABLE = "QUESTION_AVAILABLE"
-    ANSWER_SUBMITTED = "ANSWER_SUBMITTED"
-    ANSWER_EVALUATED = "ANSWER_EVALUATED"
-    INTERVIEW_COMPLETED = "INTERVIEW_COMPLETED"
+    INTERVIEW_STARTED = "interview.started"
+    QUESTION_RECEIVED = "question.received"
+    ANSWER_SUBMITTED = "answer.submitted"
+    ANSWER_EVALUATED = "answer.evaluated"
+    INTERVIEW_COMPLETED = "interview.completed"
