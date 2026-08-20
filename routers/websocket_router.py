@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from websocket.auth import authenticate_websocket
 from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
@@ -11,12 +12,16 @@ router = APIRouter(
 
 manager = ConnectionManager()
 
-
 @router.websocket("/interview/{interview_id}")
 async def interview_websocket(
     websocket: WebSocket,
     interview_id: str,
 ):
+    user_id = await authenticate_websocket(websocket)
+
+    if user_id is None:
+        return
+
     await manager.connect(
         websocket,
         interview_id,
@@ -27,6 +32,7 @@ async def interview_websocket(
             WebSocketEvent.INTERVIEW_STARTED,
             {
                 "interview_id": interview_id,
+                "user_id": user_id,
             },
             interview_id,
         )
@@ -38,6 +44,7 @@ async def interview_websocket(
                 WebSocketEvent.ANSWER_SUBMITTED,
                 {
                     "interview_id": interview_id,
+                    "user_id": user_id,
                     "message": data,
                 },
                 interview_id,
