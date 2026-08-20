@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from db.database import SessionLocal
@@ -56,12 +58,54 @@ async def interview_websocket(
         while True:
             data = await websocket.receive_text()
 
+            try:
+                message = json.loads(data)
+            except json.JSONDecodeError:
+                await websocket.send_json(
+                    {
+                        "event": "error",
+                        "message": "Invalid JSON message.",
+                    }
+                )
+                continue
+
+            if not isinstance(message, dict):
+                await websocket.send_json(
+                    {
+                        "event": "error",
+                        "message": "Message must be a JSON object.",
+                    }
+                )
+                continue
+
+            answer_text = message.get("answer")
+
+            if not isinstance(answer_text, str):
+                await websocket.send_json(
+                    {
+                        "event": "error",
+                        "message": "Answer must be a string.",
+                    }
+                )
+                continue
+
+            answer_text = answer_text.strip()
+
+            if not answer_text:
+                await websocket.send_json(
+                    {
+                        "event": "error",
+                        "message": "Answer cannot be empty.",
+                    }
+                )
+                continue
+
             await manager.broadcast_event(
                 WebSocketEvent.ANSWER_SUBMITTED,
                 {
                     "interview_id": interview_id,
                     "user_id": user_id,
-                    "message": data,
+                    "message": answer_text,
                 },
                 interview_id,
             )
@@ -71,3 +115,11 @@ async def interview_websocket(
             websocket,
             interview_id,
         )
+
+    except Exception:
+        manager.disconnect(
+            websocket,
+            interview_id,
+        )
+
+        await websocket.close(code=1011)
