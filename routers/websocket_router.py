@@ -1,6 +1,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from db.database import SessionLocal
 from websocket.auth import authenticate_websocket
+from websocket.authorization import can_access_interview
 from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
@@ -12,6 +14,7 @@ router = APIRouter(
 
 manager = ConnectionManager()
 
+
 @router.websocket("/interview/{interview_id}")
 async def interview_websocket(
     websocket: WebSocket,
@@ -21,6 +24,19 @@ async def interview_websocket(
 
     if user_id is None:
         return
+
+    db = SessionLocal()
+
+    try:
+        if not can_access_interview(
+            db,
+            user_id,
+            interview_id,
+        ):
+            await websocket.close(code=1008)
+            return
+    finally:
+        db.close()
 
     await manager.connect(
         websocket,
