@@ -1,10 +1,14 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from db.database import SessionLocal
 from schemas.websocket_schema import WebSocketAnswerMessage
+from services.deps import get_answer_service
 from websocket.auth import authenticate_websocket
-from websocket.authorization import can_access_interview
+from websocket.authorization import (
+    can_access_interview,
+    can_access_question,
+)
 from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
@@ -21,6 +25,7 @@ manager = ConnectionManager()
 async def interview_websocket(
     websocket: WebSocket,
     interview_id: str,
+    answer_service=Depends(get_answer_service),
 ):
     user_id = await authenticate_websocket(websocket)
 
@@ -62,7 +67,6 @@ async def interview_websocket(
                 message = WebSocketAnswerMessage.model_validate_json(
                     data
                 )
-
             except ValidationError:
                 await websocket.send_json(
                     {
@@ -74,11 +78,46 @@ async def interview_websocket(
 
             answer_text = message.answer.strip()
 
+            db = SessionLocal()
+
+            try:
+                if not can_access_question(
+                    db,
+                    user_id,
+                    interview_id,
+                    message.question_id,
+                ):
+                    await websocket.send_json(
+                        {
+                            "event": "error",
+                            "message": (
+                                "Question does not belong "
+                                "to this interview."
+                            ),
+                        }
+                    )
+                    continue
+
+            finally:
+                db.close()
+
+            db = SessionLocal()
+
+            try:
+                answer = answer_service.submit_answer(
+                    db,
+                    message.question_id,
+                    answer_text,
+                )
+            finally:
+                db.close()
+
             await manager.broadcast_event(
                 WebSocketEvent.ANSWER_SUBMITTED,
                 {
                     "interview_id": interview_id,
                     "user_id": user_id,
+                    "answer_id": answer.id,
                     "message": answer_text,
                 },
                 interview_id,
