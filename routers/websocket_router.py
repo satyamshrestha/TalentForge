@@ -1,8 +1,8 @@
-import json
-
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from pydantic import ValidationError
 
 from db.database import SessionLocal
+from schemas.websocket_schema import WebSocketAnswerMessage
 from websocket.auth import authenticate_websocket
 from websocket.authorization import can_access_interview
 from websocket.events import WebSocketEvent
@@ -59,46 +59,20 @@ async def interview_websocket(
             data = await websocket.receive_text()
 
             try:
-                message = json.loads(data)
-            except json.JSONDecodeError:
+                message = WebSocketAnswerMessage.model_validate_json(
+                    data
+                )
+
+            except ValidationError:
                 await websocket.send_json(
                     {
                         "event": "error",
-                        "message": "Invalid JSON message.",
+                        "message": "Invalid answer message.",
                     }
                 )
                 continue
 
-            if not isinstance(message, dict):
-                await websocket.send_json(
-                    {
-                        "event": "error",
-                        "message": "Message must be a JSON object.",
-                    }
-                )
-                continue
-
-            answer_text = message.get("answer")
-
-            if not isinstance(answer_text, str):
-                await websocket.send_json(
-                    {
-                        "event": "error",
-                        "message": "Answer must be a string.",
-                    }
-                )
-                continue
-
-            answer_text = answer_text.strip()
-
-            if not answer_text:
-                await websocket.send_json(
-                    {
-                        "event": "error",
-                        "message": "Answer cannot be empty.",
-                    }
-                )
-                continue
+            answer_text = message.answer.strip()
 
             await manager.broadcast_event(
                 WebSocketEvent.ANSWER_SUBMITTED,
