@@ -70,7 +70,7 @@ async def interview_websocket(
             except ValidationError:
                 await websocket.send_json(
                     {
-                        "event": "error",
+                        "event": WebSocketEvent.ERROR,
                         "message": "Invalid answer message.",
                     }
                 )
@@ -89,7 +89,7 @@ async def interview_websocket(
                 ):
                     await websocket.send_json(
                         {
-                            "event": "error",
+                            "event": WebSocketEvent.ERROR,
                             "message": (
                                 "Question does not belong "
                                 "to this interview."
@@ -118,7 +118,21 @@ async def interview_websocket(
                     "interview_id": interview_id,
                     "user_id": user_id,
                     "answer_id": answer.id,
-                    "message": answer_text,
+                },
+                interview_id,
+            )
+
+            await manager.broadcast_event(
+                WebSocketEvent.ANSWER_EVALUATED,
+                {
+                    "interview_id": interview_id,
+                    "user_id": user_id,
+                    "answer_id": answer.id,
+                    "score": answer.score,
+                    "feedback": answer.feedback,
+                    "suggested_improvement": (
+                        answer.suggested_improvement
+                    ),
                 },
                 interview_id,
             )
