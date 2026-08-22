@@ -8,7 +8,7 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[
             str,
-            List[WebSocket]
+            List[WebSocket],
         ] = {}
 
     async def connect(
@@ -18,12 +18,10 @@ class ConnectionManager:
     ):
         await websocket.accept()
 
-        if interview_id not in self.active_connections:
-            self.active_connections[interview_id] = []
-
-        self.active_connections[interview_id].append(
-            websocket
-        )
+        self.active_connections.setdefault(
+            interview_id,
+            [],
+        ).append(websocket)
 
     def disconnect(
         self,
@@ -32,7 +30,7 @@ class ConnectionManager:
     ):
         connections = self.active_connections.get(
             interview_id,
-            []
+            [],
         )
 
         if websocket in connections:
@@ -41,7 +39,7 @@ class ConnectionManager:
         if not connections:
             self.active_connections.pop(
                 interview_id,
-                None
+                None,
             )
 
     def get_connections(
@@ -50,7 +48,7 @@ class ConnectionManager:
     ) -> List[WebSocket]:
         return self.active_connections.get(
             interview_id,
-            []
+            [],
         )
 
     async def send_personal_message(
@@ -58,16 +56,21 @@ class ConnectionManager:
         message: dict,
         websocket: WebSocket,
     ):
-        await websocket.send_json(message)
+        try:
+            await websocket.send_json(message)
+        except Exception:
+            pass
 
     async def broadcast(
         self,
         message: dict,
         interview_id: str,
     ):
-        connections = self.get_connections(interview_id)
+        connections = self.get_connections(
+            interview_id,
+        ).copy()
 
-        for connection in connections.copy():
+        for connection in connections:
             try:
                 await connection.send_json(message)
             except Exception:
