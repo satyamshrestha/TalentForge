@@ -68,11 +68,14 @@ async def interview_websocket(
                     data
                 )
             except ValidationError:
-                await websocket.send_json(
+                await manager.send_personal_message(
                     {
                         "event": WebSocketEvent.ERROR,
-                        "message": "Invalid answer message.",
-                    }
+                        "data": {
+                            "message": "Invalid answer message."
+                        },
+                    },
+                    websocket,
                 )
                 continue
 
@@ -87,17 +90,19 @@ async def interview_websocket(
                     interview_id,
                     message.question_id,
                 ):
-                    await websocket.send_json(
+                    await manager.send_personal_message(
                         {
                             "event": WebSocketEvent.ERROR,
-                            "message": (
-                                "Question does not belong "
-                                "to this interview."
-                            ),
-                        }
+                            "data": {
+                                "message": (
+                                    "Question does not belong "
+                                    "to this interview."
+                                )
+                            },
+                        },
+                        websocket,
                     )
                     continue
-
             finally:
                 db.close()
 
@@ -136,6 +141,16 @@ async def interview_websocket(
                 },
                 interview_id,
             )
+
+            if answer.question.interview.status == "COMPLETED":
+                await manager.broadcast_event(
+                    WebSocketEvent.INTERVIEW_COMPLETED,
+                    {
+                        "interview_id": interview_id,
+                        "user_id": user_id,
+                    },
+                    interview_id,
+                )
 
     except WebSocketDisconnect:
         manager.disconnect(
