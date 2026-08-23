@@ -8,6 +8,7 @@ from exceptions.interview_exception import (
     InterviewNotFoundException,
     ResumeTextNotFoundException,
 )
+from exceptions.question_exception import QuestionNotFoundException
 from exceptions.resume_exception import (
     ResumeNotFoundException,
     ResumeAccessDeniedException,
@@ -299,12 +300,6 @@ class InterviewService:
         interview_id: str,
         user_id: str,
     ):
-        """
-        WebSocket-facing authorization helper.
-
-        Keeps interview ownership validation inside
-        the service layer instead of the WebSocket router.
-        """
         interview = (
             self.interview_repository.get_interview_by_id(
                 db,
@@ -319,6 +314,36 @@ class InterviewService:
             raise InterviewAccessDeniedException()
 
         return interview
+
+    def get_accessible_question(
+        self,
+        db: Session,
+        question_id: str,
+        interview_id: str,
+        user_id: str,
+    ):
+        question = (
+            self.question_repository.get_question_by_id(
+                db,
+                question_id,
+            )
+        )
+
+        if not question:
+            raise QuestionNotFoundException()
+
+        interview = question.interview
+
+        if not interview:
+            raise InterviewNotFoundException()
+
+        if interview.id != interview_id:
+            raise InterviewAccessDeniedException()
+
+        if interview.user_id != user_id:
+            raise InterviewAccessDeniedException()
+
+        return question
 
     def _build_interview_statistics(
         self,
