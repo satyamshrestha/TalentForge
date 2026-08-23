@@ -1,11 +1,12 @@
 import math
 import uuid
+
 from sqlalchemy.orm import Session
 
 from exceptions.interview_exception import (
     InterviewAccessDeniedException,
     InterviewNotFoundException,
-    ResumeTextNotFoundException
+    ResumeTextNotFoundException,
 )
 from exceptions.resume_exception import (
     ResumeNotFoundException,
@@ -21,6 +22,7 @@ from repositories.question_repository import QuestionRepository
 from repositories.resume_repository import ResumeRepository
 from services.audit_log_service import AuditLogService
 
+
 class InterviewService:
 
     def __init__(
@@ -29,7 +31,7 @@ class InterviewService:
         question_repository: QuestionRepository,
         resume_repository: ResumeRepository,
         question_generator: QuestionGenerator,
-        audit_log_service: AuditLogService       
+        audit_log_service: AuditLogService,
     ):
         self.interview_repository = interview_repository
         self.question_repository = question_repository
@@ -41,13 +43,19 @@ class InterviewService:
         self,
         db: Session,
         resume_id: str,
-        current_user: User
+        current_user: User,
     ):
-        resume = self.resume_repository.get_resume_by_id(db, resume_id)
+        resume = self.resume_repository.get_resume_by_id(
+            db,
+            resume_id,
+        )
+
         if not resume:
             raise ResumeNotFoundException()
+
         if resume.user_id != current_user.id:
             raise ResumeAccessDeniedException()
+
         if resume.status != "COMPLETED":
             raise ResumeNotReadyException()
 
@@ -57,73 +65,112 @@ class InterviewService:
         if not resume_text:
             raise ResumeTextNotFoundException()
 
-        questions = self.question_generator.generate(resume_text)
+        questions = self.question_generator.generate(
+            resume_text,
+        )
 
         interview = Interview(
             id=str(uuid.uuid4()),
             role_target="Backend Engineer",
             status="CREATED",
-            user_id=current_user.id
+            user_id=current_user.id,
         )
-        interview = self.interview_repository.create_interview(db, interview)
+
+        interview = self.interview_repository.create_interview(
+            db,
+            interview,
+        )
+
         self.audit_log_service.log_action(
             db,
             current_user.id,
             "CREATE_INTERVIEW",
             "INTERVIEW",
-            interview.id
+            interview.id,
         )
 
         for question_text in questions:
             question = Question(
                 id=str(uuid.uuid4()),
                 question_text=question_text,
-                interview_id=interview.id
+                interview_id=interview.id,
             )
-            self.question_repository.create_question(db, question)
-            
-        return self.interview_repository.get_interview_by_id(db, interview.id)
-    
+
+            self.question_repository.create_question(
+                db,
+                question,
+            )
+
+        return self.interview_repository.get_interview_by_id(
+            db,
+            interview.id,
+        )
+
     def retake_interview(
         self,
         db: Session,
         interview_id: str,
-        current_user: User
+        current_user: User,
     ):
-        original_interview = self._accessible_interview(db, interview_id, current_user)
+        original_interview = self._accessible_interview(
+            db,
+            interview_id,
+            current_user,
+        )
+
         new_interview = Interview(
             id=str(uuid.uuid4()),
             role_target=original_interview.role_target,
             status="CREATED",
-            user_id=current_user.id
+            user_id=current_user.id,
         )
-        new_interview = self.interview_repository.create_interview(db, new_interview)
+
+        new_interview = self.interview_repository.create_interview(
+            db,
+            new_interview,
+        )
+
         self.audit_log_service.log_action(
             db,
             current_user.id,
             "RETAKE_INTERVIEW",
             "INTERVIEW",
-            new_interview.id
+            new_interview.id,
         )
-        
+
         for old_question in original_interview.questions:
             question = Question(
                 id=str(uuid.uuid4()),
                 question_text=old_question.question_text,
-                interview_id=new_interview.id
+                interview_id=new_interview.id,
             )
-            self.question_repository.create_question(db, question)
-        return self.interview_repository.get_interview_by_id(db, new_interview.id)
-    
+
+            self.question_repository.create_question(
+                db,
+                question,
+            )
+
+        return self.interview_repository.get_interview_by_id(
+            db,
+            new_interview.id,
+        )
+
     def get_user_interviews(
         self,
         db: Session,
         current_user: User,
         page: int = 1,
         size: int = 10,
-        status: str | None = None
+        status: str | None = None,
     ):
-        result = self.interview_repository.get_interviews(db, current_user.id, page, size, status)
+        result = self.interview_repository.get_interviews(
+            db,
+            current_user.id,
+            page,
+            size,
+            status,
+        )
+
         return {
             "items": result["items"],
             "page": page,
@@ -133,48 +180,78 @@ class InterviewService:
                 result["total"] / size
                 if result["total"]
                 else 1
-            )
+            ),
         }
-    
+
     def get_interview_detail(
         self,
         db: Session,
         interview_id: str,
-        current_user: User
+        current_user: User,
     ):
-        interview = self._accessible_interview(db, interview_id, current_user)
-        statistics = self._build_interview_statistics(interview)
+        interview = self._accessible_interview(
+            db,
+            interview_id,
+            current_user,
+        )
+
+        statistics = self._build_interview_statistics(
+            interview,
+        )
+
         return {
             "id": interview.id,
             "role_target": interview.role_target,
             "status": interview.status,
             "created_at": interview.created_at,
             "statistics": statistics,
-            "questions": interview.questions
+            "questions": interview.questions,
         }
-    
+
     def get_interview_summary(
         self,
         db: Session,
         interview_id: str,
-        current_user: User
+        current_user: User,
     ):
-        interview = self._accessible_interview(db, interview_id, current_user)
-        statistics = self._build_interview_statistics(interview)
-        # TODO: Use feedbacks to generate more detailed strengths/weaknesses.
+        interview = self._accessible_interview(
+            db,
+            interview_id,
+            current_user,
+        )
+
+        statistics = self._build_interview_statistics(
+            interview,
+        )
 
         strengths = []
         weaknesses = []
+
         average = statistics["average_score"]
+
         if average >= 8:
-            strengths.append("Strong overall interview performance.")
-            overall_feedback = ("Strong backend knowledge demonstrated.")
+            strengths.append(
+                "Strong overall interview performance."
+            )
+            overall_feedback = (
+                "Strong backend knowledge demonstrated."
+            )
+
         elif average >= 6:
-            strengths.append("Good backend fundamentals.")
-            overall_feedback = ("Good understanding with room for improvement.")
+            strengths.append(
+                "Good backend fundamentals."
+            )
+            overall_feedback = (
+                "Good understanding with room for improvement."
+            )
+
         else:
-            weaknesses.append("Needs improvement in core backend concepts.")
-            overall_feedback = ("Further practice is recommended.")
+            weaknesses.append(
+                "Needs improvement in core backend concepts."
+            )
+            overall_feedback = (
+                "Further practice is recommended."
+            )
 
         return {
             "interview_id": interview.id,
@@ -184,72 +261,130 @@ class InterviewService:
             "answered_questions": statistics["answered_questions"],
             "strengths": strengths,
             "weaknesses": weaknesses,
-            "overall_feedback": overall_feedback
+            "overall_feedback": overall_feedback,
         }
-    
+
     def delete_interview(
         self,
         db: Session,
         interview_id: str,
-        current_user: User
+        current_user: User,
     ):
         interview = self._accessible_interview(
             db,
             interview_id,
-            current_user
+            current_user,
         )
+
         self.audit_log_service.log_action(
             db,
             current_user.id,
             "DELETE_INTERVIEW",
             "INTERVIEW",
-            interview.id
+            interview.id,
         )
-        self.interview_repository.delete_interview(db, interview)
-        return {"message": "Interview deleted successfully."}
-    
+
+        self.interview_repository.delete_interview(
+            db,
+            interview,
+        )
+
+        return {
+            "message": "Interview deleted successfully."
+        }
+
+    def get_accessible_interview(
+        self,
+        db: Session,
+        interview_id: str,
+        user_id: str,
+    ):
+        """
+        WebSocket-facing authorization helper.
+
+        Keeps interview ownership validation inside
+        the service layer instead of the WebSocket router.
+        """
+        interview = (
+            self.interview_repository.get_interview_by_id(
+                db,
+                interview_id,
+            )
+        )
+
+        if not interview:
+            raise InterviewNotFoundException()
+
+        if interview.user_id != user_id:
+            raise InterviewAccessDeniedException()
+
+        return interview
+
     def _build_interview_statistics(
         self,
-        interview: Interview
+        interview: Interview,
     ):
-        total_questions = len(interview.questions)
+        total_questions = len(
+            interview.questions
+        )
+
         answered_questions = sum(
             1
             for question in interview.questions
             if question.answer
         )
+
         scores = [
             int(question.answer.score)
             for question in interview.questions
-            if question.answer and question.answer.score is not None
+            if (
+                question.answer
+                and question.answer.score is not None
+            )
         ]
+
         average_score = (
-            sum(scores)/len(scores)
+            sum(scores) / len(scores)
             if scores
             else 0
         )
-        
+
         completion_percentage = (
-            (answered_questions/total_questions) * 100
+            (answered_questions / total_questions) * 100
             if total_questions
             else 0
         )
+
         return {
             "total_questions": total_questions,
             "answered_questions": answered_questions,
-            "average_score": round(average_score, 2),
-            "completion_percentage": round(completion_percentage, 2)
+            "average_score": round(
+                average_score,
+                2,
+            ),
+            "completion_percentage": round(
+                completion_percentage,
+                2,
+            ),
         }
-    
+
     def _accessible_interview(
         self,
         db: Session,
         interview_id: str,
-        current_user: User
+        current_user: User,
     ):
-        interview = self.interview_repository.get_interview_by_id(db, interview_id)
+        interview = (
+            self.interview_repository.get_interview_by_id(
+                db,
+                interview_id,
+            )
+        )
+
         if not interview:
             raise InterviewNotFoundException()
+
         if interview.user_id != current_user.id:
             raise InterviewAccessDeniedException()
+
         return interview
