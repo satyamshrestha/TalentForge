@@ -5,12 +5,12 @@ from pydantic import ValidationError
 
 from db.database import SessionLocal
 from schemas.websocket_schema import WebSocketAnswerMessage
-from services.deps import get_answer_service
-from websocket.auth import authenticate_websocket
-from websocket.authorization import (
-    can_access_interview,
-    can_access_question,
+from services.deps import (
+    get_answer_service,
+    get_interview_service,
 )
+from websocket.auth import authenticate_websocket
+from websocket.authorization import can_access_question
 from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
@@ -31,6 +31,7 @@ async def interview_websocket(
     websocket: WebSocket,
     interview_id: str,
     answer_service=Depends(get_answer_service),
+    interview_service=Depends(get_interview_service),
 ):
     user_id = await authenticate_websocket(
         websocket,
@@ -42,16 +43,17 @@ async def interview_websocket(
     db = SessionLocal()
 
     try:
-        if not can_access_interview(
+        interview_service.get_accessible_interview(
             db,
-            user_id,
             interview_id,
-        ):
-            await websocket.close(
-                code=1008,
-                reason="Access denied.",
-            )
-            return
+            user_id,
+        )
+    except Exception:
+        await websocket.close(
+            code=1008,
+            reason="Access denied.",
+        )
+        return
     finally:
         db.close()
 
@@ -144,7 +146,7 @@ async def interview_websocket(
                     answer_text,
                 )
 
-            except Exception as exc:
+            except Exception:
                 logger.exception(
                     "WebSocket answer submission failed | "
                     "interview_id=%s | "
