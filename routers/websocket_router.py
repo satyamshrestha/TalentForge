@@ -5,11 +5,12 @@ from pydantic import ValidationError
 
 from db.database import SessionLocal
 from schemas.websocket_schema import WebSocketAnswerMessage
-from services.deps import (
-    get_answer_service,
-    get_interview_service,
-)
+from services.deps import get_answer_service
 from websocket.auth import authenticate_websocket
+from websocket.authorization import (
+    can_access_interview,
+    can_access_question,
+)
 from websocket.events import WebSocketEvent
 from websocket.manager import ConnectionManager
 
@@ -30,11 +31,8 @@ async def interview_websocket(
     websocket: WebSocket,
     interview_id: str,
     answer_service=Depends(get_answer_service),
-    interview_service=Depends(get_interview_service),
 ):
-    user_id = await authenticate_websocket(
-        websocket,
-    )
+    user_id = await authenticate_websocket(websocket)
 
     if user_id is None:
         return
@@ -42,19 +40,16 @@ async def interview_websocket(
     db = SessionLocal()
 
     try:
-        interview_service.get_accessible_interview(
+        if not can_access_interview(
             db,
-            interview_id,
             user_id,
-        )
-
-    except Exception:
-        await websocket.close(
-            code=1008,
-            reason="Access denied.",
-        )
-        return
-
+            interview_id,
+        ):
+            await websocket.close(
+                code=1008,
+                reason="Access denied.",
+            )
+            return
     finally:
         db.close()
 
@@ -81,15 +76,12 @@ async def interview_websocket(
                     WebSocketAnswerMessage
                     .model_validate_json(data)
                 )
-
             except ValidationError:
                 await manager.send_personal_message(
                     {
                         "event": WebSocketEvent.ERROR,
                         "data": {
-                            "message": (
-                                "Invalid answer message."
-                            ),
+                            "message": "Invalid answer message.",
                         },
                     },
                     websocket,
@@ -103,9 +95,7 @@ async def interview_websocket(
                     {
                         "event": WebSocketEvent.ERROR,
                         "data": {
-                            "message": (
-                                "Answer cannot be empty."
-                            ),
+                            "message": "Answer cannot be empty.",
                         },
                     },
                     websocket,
@@ -115,28 +105,25 @@ async def interview_websocket(
             db = SessionLocal()
 
             try:
-                interview_service.get_accessible_question(
+                if not can_access_question(
                     db,
-                    message.question_id,
-                    interview_id,
                     user_id,
-                )
-
-            except Exception:
-                await manager.send_personal_message(
-                    {
-                        "event": WebSocketEvent.ERROR,
-                        "data": {
-                            "message": (
-                                "Question does not belong "
-                                "to this interview."
-                            ),
+                    interview_id,
+                    message.question_id,
+                ):
+                    await manager.send_personal_message(
+                        {
+                            "event": WebSocketEvent.ERROR,
+                            "data": {
+                                "message": (
+                                    "Question does not belong "
+                                    "to this interview."
+                                ),
+                            },
                         },
-                    },
-                    websocket,
-                )
-                continue
-
+                        websocket,
+                    )
+                    continue
             finally:
                 db.close()
 
@@ -164,9 +151,7 @@ async def interview_websocket(
                     {
                         "event": WebSocketEvent.ERROR,
                         "data": {
-                            "message": (
-                                "Unable to submit answer."
-                            ),
+                            "message": "Unable to submit answer.",
                         },
                     },
                     websocket,
