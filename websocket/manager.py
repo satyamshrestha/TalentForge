@@ -1,4 +1,4 @@
-from typing import Dict, List
+from collections import defaultdict
 
 from fastapi import WebSocket
 
@@ -6,10 +6,7 @@ from fastapi import WebSocket
 class ConnectionManager:
 
     def __init__(self):
-        self.active_connections: Dict[
-            str,
-            List[WebSocket],
-        ] = {}
+        self.active_connections: dict[str, list[WebSocket]] = defaultdict(list)
 
     async def connect(
         self,
@@ -18,66 +15,32 @@ class ConnectionManager:
     ):
         await websocket.accept()
 
-        self.active_connections.setdefault(
-            interview_id,
-            [],
-        ).append(websocket)
+        self.active_connections[interview_id].append(
+            websocket
+        )
 
     def disconnect(
         self,
         websocket: WebSocket,
         interview_id: str,
     ):
-        connections = self.active_connections.get(
-            interview_id,
-            [],
-        )
+        connections = self.active_connections.get(interview_id)
+
+        if not connections:
+            return
 
         if websocket in connections:
             connections.remove(websocket)
 
         if not connections:
-            self.active_connections.pop(
-                interview_id,
-                None,
-            )
-
-    def get_connections(
-        self,
-        interview_id: str,
-    ) -> List[WebSocket]:
-        return self.active_connections.get(
-            interview_id,
-            [],
-        )
+            del self.active_connections[interview_id]
 
     async def send_personal_message(
         self,
         message: dict,
         websocket: WebSocket,
     ):
-        try:
-            await websocket.send_json(message)
-        except Exception:
-            pass
-
-    async def broadcast(
-        self,
-        message: dict,
-        interview_id: str,
-    ):
-        connections = self.get_connections(
-            interview_id,
-        ).copy()
-
-        for connection in connections:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                self.disconnect(
-                    connection,
-                    interview_id,
-                )
+        await websocket.send_json(message)
 
     async def broadcast_event(
         self,
@@ -85,10 +48,21 @@ class ConnectionManager:
         data: dict,
         interview_id: str,
     ):
-        await self.broadcast(
-            {
-                "event": event,
-                "data": data,
-            },
+        message = {
+            "event": event,
+            "data": data,
+        }
+
+        connections = self.active_connections.get(
             interview_id,
+            [],
         )
+
+        for connection in connections.copy():
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(
+                    connection,
+                    interview_id,
+                )
