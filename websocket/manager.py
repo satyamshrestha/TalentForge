@@ -1,12 +1,11 @@
-from collections import defaultdict
+from typing import Dict, Set
 
 from fastapi import WebSocket
 
 
 class ConnectionManager:
-
     def __init__(self):
-        self.active_connections: dict[str, list[WebSocket]] = defaultdict(list)
+        self.active_connections: Dict[str, Set[WebSocket]] = {}
 
     async def connect(
         self,
@@ -15,9 +14,10 @@ class ConnectionManager:
     ):
         await websocket.accept()
 
-        self.active_connections[interview_id].append(
-            websocket
-        )
+        if interview_id not in self.active_connections:
+            self.active_connections[interview_id] = set()
+
+        self.active_connections[interview_id].add(websocket)
 
     def disconnect(
         self,
@@ -29,8 +29,7 @@ class ConnectionManager:
         if not connections:
             return
 
-        if websocket in connections:
-            connections.remove(websocket)
+        connections.discard(websocket)
 
         if not connections:
             del self.active_connections[interview_id]
@@ -44,7 +43,7 @@ class ConnectionManager:
 
     async def broadcast_event(
         self,
-        event: str,
+        event,
         data: dict,
         interview_id: str,
     ):
@@ -55,14 +54,19 @@ class ConnectionManager:
 
         connections = self.active_connections.get(
             interview_id,
-            [],
+            set(),
         )
 
-        for connection in connections.copy():
+        disconnected = set()
+
+        for connection in connections:
             try:
                 await connection.send_json(message)
             except Exception:
-                self.disconnect(
-                    connection,
-                    interview_id,
-                )
+                disconnected.add(connection)
+
+        for connection in disconnected:
+            self.disconnect(
+                connection,
+                interview_id,
+            )
