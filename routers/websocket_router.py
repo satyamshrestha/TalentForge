@@ -4,6 +4,12 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from db.database import SessionLocal
+from exceptions.answer_exception import (
+    QuestionAlreadyAnsweredException,
+)
+from exceptions.question_exception import (
+    QuestionNotFoundException,
+)
 from schemas.websocket_schema import WebSocketAnswerMessage
 from services.deps import get_answer_service
 from websocket.auth import authenticate_websocket
@@ -32,9 +38,7 @@ async def interview_websocket(
     interview_id: str,
     answer_service=Depends(get_answer_service),
 ):
-    user_id = await authenticate_websocket(
-        websocket,
-    )
+    user_id = await authenticate_websocket(websocket)
 
     if user_id is None:
         return
@@ -137,6 +141,34 @@ async def interview_websocket(
                     message.question_id,
                     answer_text,
                 )
+
+            except QuestionNotFoundException:
+                await manager.send_personal_message(
+                    {
+                        "event": WebSocketEvent.ERROR,
+                        "data": {
+                            "message": "Question not found.",
+                        },
+                    },
+                    websocket,
+                )
+                continue
+
+            except QuestionAlreadyAnsweredException:
+                await manager.send_personal_message(
+                    {
+                        "event": WebSocketEvent.ERROR,
+                        "data": {
+                            "message": (
+                                "This question has already "
+                                "been answered."
+                            ),
+                        },
+                    },
+                    websocket,
+                )
+                continue
+
             except Exception:
                 logger.exception(
                     "WebSocket answer submission failed | "
@@ -152,12 +184,15 @@ async def interview_websocket(
                     {
                         "event": WebSocketEvent.ERROR,
                         "data": {
-                            "message": "Unable to submit answer.",
+                            "message": (
+                                "Unable to submit answer."
+                            ),
                         },
                     },
                     websocket,
                 )
                 continue
+
             finally:
                 db.close()
 
