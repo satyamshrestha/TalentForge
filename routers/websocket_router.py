@@ -32,7 +32,9 @@ async def interview_websocket(
     interview_id: str,
     answer_service=Depends(get_answer_service),
 ):
-    user_id = await authenticate_websocket(websocket)
+    user_id = await authenticate_websocket(
+        websocket,
+    )
 
     if user_id is None:
         return
@@ -135,7 +137,6 @@ async def interview_websocket(
                     message.question_id,
                     answer_text,
                 )
-
             except Exception:
                 logger.exception(
                     "WebSocket answer submission failed | "
@@ -157,7 +158,6 @@ async def interview_websocket(
                     websocket,
                 )
                 continue
-
             finally:
                 db.close()
 
@@ -185,6 +185,16 @@ async def interview_websocket(
                 },
                 interview_id,
             )
+
+            if answer.question.interview.status == "COMPLETED":
+                await manager.broadcast_event(
+                    WebSocketEvent.INTERVIEW_COMPLETED,
+                    {
+                        "interview_id": interview_id,
+                        "user_id": user_id,
+                    },
+                    interview_id,
+                )
 
     except WebSocketDisconnect:
         manager.disconnect(
