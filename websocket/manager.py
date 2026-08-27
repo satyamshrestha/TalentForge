@@ -14,10 +14,12 @@ class ConnectionManager:
     ):
         await websocket.accept()
 
-        if interview_id not in self.active_connections:
-            self.active_connections[interview_id] = set()
+        connections = self.active_connections.setdefault(
+            interview_id,
+            set(),
+        )
 
-        self.active_connections[interview_id].add(websocket)
+        connections.add(websocket)
 
     def disconnect(
         self,
@@ -32,7 +34,10 @@ class ConnectionManager:
         connections.discard(websocket)
 
         if not connections:
-            del self.active_connections[interview_id]
+            self.active_connections.pop(
+                interview_id,
+                None,
+            )
 
     async def send_personal_message(
         self,
@@ -59,7 +64,7 @@ class ConnectionManager:
 
         disconnected = set()
 
-        for connection in connections:
+        for connection in connections.copy():
             try:
                 await connection.send_json(message)
             except Exception:
@@ -70,3 +75,14 @@ class ConnectionManager:
                 connection,
                 interview_id,
             )
+
+    def get_connection_count(
+        self,
+        interview_id: str,
+    ) -> int:
+        return len(
+            self.active_connections.get(
+                interview_id,
+                set(),
+            )
+        )
