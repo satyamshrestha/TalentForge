@@ -44,7 +44,10 @@ class ConnectionManager:
         message: dict,
         websocket: WebSocket,
     ):
-        await websocket.send_json(message)
+        try:
+            await websocket.send_json(message)
+        except Exception:
+            pass
 
     async def broadcast_event(
         self,
