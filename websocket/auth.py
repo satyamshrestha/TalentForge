@@ -10,7 +10,10 @@ async def authenticate_websocket(
     token = websocket.query_params.get("token")
 
     if not token:
-        await websocket.close(code=1008)
+        await websocket.close(
+            code=1008,
+            reason="Authentication required.",
+        )
         return None
 
     try:
@@ -23,11 +26,17 @@ async def authenticate_websocket(
         user_id = payload.get("sub")
 
         if not user_id:
-            await websocket.close(code=1008)
+            await websocket.close(
+                code=1008,
+                reason="Invalid authentication token.",
+            )
             return None
 
         return user_id
 
     except JWTError:
-        await websocket.close(code=1008)
+        await websocket.close(
+            code=1008,
+            reason="Invalid authentication token.",
+        )
         return None
