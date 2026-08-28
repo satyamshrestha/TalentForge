@@ -184,9 +184,7 @@ async def interview_websocket(
                     {
                         "event": WebSocketEvent.ERROR,
                         "data": {
-                            "message": (
-                                "Unable to submit answer."
-                            ),
+                            "message": "Unable to submit answer.",
                         },
                     },
                     websocket,
@@ -232,9 +230,12 @@ async def interview_websocket(
                 )
 
     except WebSocketDisconnect:
-        manager.disconnect(
-            websocket,
+        logger.info(
+            "WebSocket disconnected | "
+            "interview_id=%s | "
+            "user_id=%s",
             interview_id,
+            user_id,
         )
 
     except Exception:
@@ -246,15 +247,8 @@ async def interview_websocket(
             user_id,
         )
 
+    finally:
         manager.disconnect(
             websocket,
             interview_id,
         )
-
-        try:
-            await websocket.close(
-                code=1011,
-                reason="Internal WebSocket error.",
-            )
-        except Exception:
-            pass
