@@ -683,111 +683,225 @@ Trusted host validation
 
 These concerns remain outside individual business services.
 
-14. WebSocket Architecture
+# 14. WebSocket Architecture
 
-TalentForge supports WebSocket-based real-time communication for interactive application workflows.
+TalentForge supports WebSocket-based real-time communication for interactive interview workflows.
 
-The WebSocket architecture is intentionally separated from the REST API layer.
+The WebSocket architecture is separated from the REST API layer while still using the same application services and persistence layer.
 
+```text
 Client
-  │
-  │ WebSocket
-  ▼
+   │
+   │ WebSocket
+   ▼
 Nginx
-  │
-  ▼
+   │
+   ▼
 FastAPI
-  │
-  ▼
-WebSocket Endpoint
-  │
-  ▼
+   │
+   ▼
+WebSocket Router
+   │
+   ├── Authentication
+   │
+   ├── Interview Authorization
+   │
+   ├── Message Validation
+   │
+   ▼
 Connection Manager
-  │
-  ▼
-Application Service
-  │
-  ├───────────────┐
-  ▼               ▼
-PostgreSQL       Redis
+   │
+   ▼
+Answer Service
+   │
+   ├── Answer Repository
+   ├── AI Answer Evaluator
+   ├── Interview Status
+   └── Audit Log
+   │
+   ▼
+PostgreSQL
+```
 
-The WebSocket layer is responsible for connection lifecycle management rather than business logic.
+The WebSocket layer is responsible for communication and connection lifecycle management. Business rules remain inside the application service layer.
 
-Connection
-     │
-     ▼
-Authentication
-     │
-     ▼
+## WebSocket Connection Lifecycle
+
+```text
+Client
+   │
+   ▼
+WebSocket Connection
+   │
+   ▼
+Authenticate JWT
+   │
+   ▼
+Authorize Interview Access
+   │
+   ▼
 Accept Connection
-     │
-     ▼
+   │
+   ▼
 Register Connection
-     │
-     ▼
-Receive / Send Events
-     │
-     ▼
+   │
+   ▼
+Receive Messages
+   │
+   ▼
+Validate Message
+   │
+   ▼
+Process Answer
+   │
+   ▼
+Broadcast Event
+   │
+   ▼
 Disconnect
-     │
-     ▼
+   │
+   ▼
 Remove Connection
+```
 
-A connection manager maintains active connections.
+Authentication is performed before the connection is accepted. Invalid or missing authentication results in the connection being closed with a WebSocket policy-violation status.
 
-Conceptually:
+Interview ownership is validated before a client is allowed to participate in an interview WebSocket session.
 
+## Connection Manager
+
+The `ConnectionManager` maintains active WebSocket connections grouped by interview.
+
+```text
 Connection Manager
-       │
-       ├── User A ─── WebSocket
-       ├── User B ─── WebSocket
-       └── User C ─── WebSocket
+        │
+        ├── Interview A
+        │      ├── WebSocket
+        │      └── WebSocket
+        │
+        └── Interview B
+               └── WebSocket
+```
 
-This provides a centralized location for:
+The manager is responsible for:
 
-Connection registration
-Connection removal
-Sending messages to individual clients
-Broadcasting events
-Handling disconnects
-Real-Time Interview Updates
+* registering connections
+* removing disconnected connections
+* sending personal messages
+* broadcasting events
+* cleaning up failed connections
+* tracking active connections per interview
 
-WebSockets are particularly useful for real-time interview workflows.
+The manager does not contain interview or answer business logic.
 
-For example:
+## Answer Submission Flow
 
-Interview Processing
-       │
-       ▼
-Application Event
-       │
-       ▼
-WebSocket Layer
-       │
-       ▼
-Connected Client
+Answers received through WebSockets follow the existing application service architecture.
 
-A client can receive events such as:
+```text
+WebSocket Client
+      │
+      ▼
+WebSocket Router
+      │
+      ▼
+Pydantic Validation
+      │
+      ▼
+Question Authorization
+      │
+      ▼
+AnswerService
+      │
+      ├── Prevent duplicate answers
+      ├── Evaluate answer through AI
+      ├── Persist answer
+      ├── Create audit log
+      └── Update interview status
+      │
+      ▼
+WebSocket Events
+```
 
+This ensures that WebSocket requests do not bypass the application's existing business rules.
+
+## WebSocket Events
+
+The WebSocket event system is centralized in `websocket/events.py`.
+
+Current events include:
+
+```text
 INTERVIEW_STARTED
 QUESTION_AVAILABLE
 ANSWER_SUBMITTED
 ANSWER_EVALUATED
 INTERVIEW_COMPLETED
+ERROR
+```
 
-The exact event types can evolve independently from the WebSocket transport.
+Events are transmitted using a consistent structure:
 
-REST vs WebSocket
+```json
+{
+    "event": "answer.evaluated",
+    "data": {
+        "interview_id": "...",
+        "answer_id": "...",
+        "score": 8,
+        "feedback": "...",
+        "suggested_improvement": "..."
+    }
+}
+```
+
+The event name identifies what happened, while the `data` object contains the associated information.
+
+## Real-Time Interview Flow
+
+A typical interview interaction follows this sequence:
+
+```text
+Client connects
+      │
+      ▼
+INTERVIEW_STARTED
+      │
+      ▼
+Client submits answer
+      │
+      ▼
+ANSWER_SUBMITTED
+      │
+      ▼
+AI evaluation
+      │
+      ▼
+ANSWER_EVALUATED
+      │
+      ▼
+All questions answered?
+      │
+     Yes
+      │
+      ▼
+INTERVIEW_COMPLETED
+```
+
+The WebSocket layer therefore provides real-time communication while the existing service layer remains responsible for business logic and persistence.
+
+## REST vs WebSocket
 
 TalentForge uses both communication models for different responsibilities.
 
-Communication	Purpose
-REST	CRUD operations and request/response workflows
-WebSocket	Real-time events and live application updates
-Celery	Long-running asynchronous processing
-Redis	Caching and infrastructure support
+| Communication | Purpose                                        |
+| ------------- | ---------------------------------------------- |
+| REST          | CRUD operations and request/response workflows |
+| WebSocket     | Real-time interview events and live updates    |
+| Celery        | Long-running asynchronous processing           |
+| Redis         | Caching and infrastructure support             |
 
-This prevents WebSockets from being used where ordinary REST requests are more appropriate.
+WebSockets are therefore used where persistent real-time communication provides value, while ordinary application operations continue to use the REST API.
 
 15. Exception Architecture
 
