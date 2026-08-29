@@ -344,6 +344,163 @@ Interview functionality includes:
 
 ---
 
+# ⚡ Real-Time Interview WebSocket
+
+TalentForge provides real-time interview communication through WebSockets.
+
+WebSockets are used for live interview events while the existing REST API remains responsible for normal request/response operations.
+
+## Endpoint
+
+```text
+ws://localhost:8000/ws/interview/{interview_id}?token={jwt}
+```
+
+The JWT is supplied through the WebSocket query parameter.
+
+## Connection Flow
+
+```text
+Client
+  │
+  ▼
+WebSocket Connection
+  │
+  ▼
+JWT Authentication
+  │
+  ▼
+Interview Access Check
+  │
+  ▼
+Connection Manager
+  │
+  ▼
+Real-Time Interview Session
+```
+
+Connections that fail authentication or interview access validation are rejected with WebSocket policy-violation status `1008`.
+
+## Answer Message
+
+Clients submit answers using the following message structure:
+
+```json
+{
+    "question_id": "question-uuid",
+    "answer": "Candidate's answer"
+}
+```
+
+Incoming messages are validated through the `WebSocketAnswerMessage` Pydantic schema before being processed.
+
+Empty answers and malformed messages are rejected without terminating the WebSocket connection.
+
+## Answer Processing
+
+A valid answer follows the normal application service pipeline:
+
+```text
+WebSocket Message
+       │
+       ▼
+Pydantic Validation
+       │
+       ▼
+Question Authorization
+       │
+       ▼
+AnswerService
+       │
+       ├── Validate Question
+       ├── Prevent Duplicate Answer
+       ├── AI Evaluation
+       ├── Persist Answer
+       ├── Audit Log
+       └── Update Interview Status
+       │
+       ▼
+WebSocket Events
+```
+
+The WebSocket layer therefore does not duplicate answer-processing business logic.
+
+## WebSocket Events
+
+TalentForge currently defines the following WebSocket events:
+
+| Event                 | Purpose                                                   |
+| --------------------- | --------------------------------------------------------- |
+| `interview.started`   | Indicates that an interview WebSocket session has started |
+| `question.available`  | Indicates that a question is available to the client      |
+| `answer.submitted`    | Indicates that an answer has been successfully submitted  |
+| `answer.evaluated`    | Provides AI-generated answer evaluation                   |
+| `interview.completed` | Indicates that the interview has been completed           |
+| `error`               | Reports a client-visible WebSocket error                  |
+
+### `answer.submitted`
+
+```json
+{
+    "event": "answer.submitted",
+    "data": {
+        "interview_id": "interview-uuid",
+        "user_id": "user-uuid",
+        "answer_id": "answer-uuid"
+    }
+}
+```
+
+### `answer.evaluated`
+
+```json
+{
+    "event": "answer.evaluated",
+    "data": {
+        "interview_id": "interview-uuid",
+        "user_id": "user-uuid",
+        "answer_id": "answer-uuid",
+        "score": 8,
+        "feedback": "Evaluation feedback",
+        "suggested_improvement": "Suggested improvement"
+    }
+}
+```
+
+### `error`
+
+```json
+{
+    "event": "error",
+    "data": {
+        "message": "Invalid answer message."
+    }
+}
+```
+
+## Connection Management
+
+Active WebSocket connections are managed by the `ConnectionManager`.
+
+Connections are grouped by `interview_id`, allowing events to be broadcast to clients participating in the same interview.
+
+The manager also handles:
+
+* connection registration
+* connection removal
+* personal error messages
+* event broadcasting
+* disconnect cleanup
+
+## Error Handling
+
+Client-side validation errors are returned through the WebSocket connection without terminating the session.
+
+Unexpected server-side failures are logged and the connection is closed using WebSocket status `1011`.
+
+This keeps the WebSocket layer resilient while preventing internal exceptions from being exposed to clients.
+
+
 # 🔄 Interview Retakes
 
 Completed interviews remain unchanged when a user starts a retake.
