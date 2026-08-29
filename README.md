@@ -904,20 +904,37 @@ The project emphasizes:
 
 # 🧭 Project Direction
 
-TalentForge is being developed as a long-term backend engineering project.
+TalentForge is being developed as a long-term backend engineering project with an emphasis on engineering depth rather than continuous feature expansion.
 
-The focus is on progressively improving the system through:
+The current system focuses on demonstrating production-oriented backend practices across:
+
+* Clean architecture and separation of concerns
+* Authentication and authorization
+* AI provider abstraction
+* Asynchronous processing
+* Real-time WebSocket communication
+* Database persistence and migrations
+* Caching
+* Audit logging
+* Testing
+* Observability
+* Containerized deployment
+* CI/CD
+
+Future engineering work will focus on strengthening the existing system rather than simply adding more application features.
+
+Planned areas include:
 
 * Advanced observability
-* Production deployment
-* Distributed-system patterns
+* Production deployment hardening
 * Performance optimization
-* System design
+* Distributed-system patterns
 * Scalability improvements
-* Additional AI provider support
+* Advanced system design
+* Additional AI provider integrations
 * Infrastructure improvements
 
-The project prioritizes **engineering depth over continuously adding features**.
+The long-term objective is to evolve TalentForge into a polished, production-style backend system that demonstrates practical software engineering, architecture, reliability, and scalability skills.
 
 ---
 
