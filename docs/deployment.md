@@ -12,26 +12,30 @@ TalentForge production deployment consists of the following services:
                          Nginx
                            │
                            ▼
-                      FastAPI API
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-     PostgreSQL          Redis        Celery Worker
-          │                │                │
-          ▼                ▼                ▼
-      Database          Cache        Background Jobs
+                    FastAPI Application
+                      │            │
+                      │            └──── WebSocket
+                      │                   Connections
+          ┌───────────┼───────────────┐
+          ▼           ▼               ▼
+     PostgreSQL     Redis        Celery Worker
+          │           │               │
+          ▼           ▼               ▼
+       Database      Cache       Background Jobs
 ```
+
+Nginx acts as the public reverse proxy and routes HTTP API traffic and WebSocket connections to the FastAPI application.
 
 Monitoring stack:
 
 ```text
-                    FastAPI Application
-                            │
-                            ▼
-                      Prometheus
-                            │
-                            ▼
-                         Grafana
+                  FastAPI Application
+                          │
+                          ▼
+                     Prometheus
+                          │
+                          ▼
+                       Grafana
 ```
 
 ---
@@ -40,9 +44,9 @@ Monitoring stack:
 
 Install the following:
 
-- Docker Engine
-- Docker Compose
-- Git
+* Docker Engine
+* Docker Compose
+* Git
 
 Required production files:
 
@@ -50,6 +54,8 @@ Required production files:
 .env.prod
 docker-compose.prod.yml
 ```
+
+Before deployment, ensure the production Docker configuration and required environment variables have been reviewed.
 
 ---
 
@@ -61,7 +67,7 @@ Create the production environment file:
 cp .env.example .env.prod
 ```
 
-Configure required environment variables:
+Configure the required environment variables:
 
 ```env
 SECRET_KEY=
@@ -82,7 +88,9 @@ LLM_MODEL=
 OLLAMA_BASE_URL=
 ```
 
-> Never commit production secrets to version control.
+> **Never commit production secrets to version control.**
+
+Production credentials should be strong, unique, and stored securely.
 
 ---
 
@@ -99,11 +107,13 @@ docker compose \
   pull
 ```
 
+Before starting the new version, verify that the expected image was pulled successfully.
+
 ---
 
 # Start Production Services
 
-Start all production containers:
+Start the production containers:
 
 ```bash
 docker compose \
@@ -114,15 +124,15 @@ docker compose \
 
 The deployment starts:
 
-| Service | Purpose |
-|---|---|
-| API | FastAPI application |
-| PostgreSQL | Primary database |
-| Redis | Cache and Celery broker |
-| Celery Worker | Background processing |
-| Nginx | Reverse proxy |
-| Prometheus | Metrics collection |
-| Grafana | Monitoring dashboards |
+| Service       | Purpose                             |
+| ------------- | ----------------------------------- |
+| API           | FastAPI application                 |
+| PostgreSQL    | Primary database                    |
+| Redis         | Cache and Celery broker             |
+| Celery Worker | Background processing               |
+| Nginx         | Reverse proxy and WebSocket gateway |
+| Prometheus    | Metrics collection                  |
+| Grafana       | Monitoring dashboards               |
 
 ---
 
@@ -137,6 +147,10 @@ docker compose \
   exec api alembic upgrade head
 ```
 
+Database migrations should be applied only after the required application image is running and the database connection is available.
+
+Always review migration changes before applying them to production.
+
 ---
 
 # Verify Deployment
@@ -144,10 +158,22 @@ docker compose \
 Check running containers:
 
 ```bash
-docker ps
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  ps
 ```
 
-Expected services should be running successfully.
+Verify that the expected services are running and that containers are not repeatedly restarting.
+
+For additional inspection:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  ps -a
+```
 
 ---
 
@@ -167,17 +193,58 @@ Expected response:
 }
 ```
 
+A successful health response confirms that the application is reachable through the configured reverse proxy.
+
+---
+
+# WebSocket Verification
+
+TalentForge uses WebSockets for real-time interview communication.
+
+The production WebSocket endpoint follows this structure:
+
+```text
+wss://<domain>/ws/interview/{interview_id}?token=<jwt>
+```
+
+For local or non-TLS environments:
+
+```text
+ws://localhost/ws/interview/{interview_id}?token=<jwt>
+```
+
+Production deployments should use **WSS (`wss://`) behind HTTPS**.
+
+WebSocket connections require:
+
+1. A valid JWT.
+2. Access to the requested interview.
+3. A valid interview identifier.
+4. A valid WebSocket message format when submitting answers.
+
+The WebSocket connection should be verified after deployment to ensure that Nginx correctly forwards the WebSocket upgrade request to FastAPI.
+
+The WebSocket path should remain consistent between Nginx, FastAPI, and the client application:
+
+```text
+/ws/interview/{interview_id}
+```
+
 ---
 
 # Monitoring
 
 Available monitoring services:
 
-| Service | Address |
-|---|---|
-| API | http://localhost |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 |
+| Service    | Address                 |
+| ---------- | ----------------------- |
+| API        | `http://localhost`      |
+| Prometheus | `http://localhost:9090` |
+| Grafana    | `http://localhost:3000` |
+
+Prometheus should be checked after deployment to ensure that application metrics are being collected successfully.
+
+Grafana should be checked to ensure that configured dashboards can retrieve the expected metrics.
 
 ---
 
@@ -201,7 +268,7 @@ docker compose \
   logs -f api
 ```
 
-Example:
+Celery worker logs:
 
 ```bash
 docker compose \
@@ -209,6 +276,25 @@ docker compose \
   -f docker-compose.prod.yml \
   logs -f celery_worker
 ```
+
+For WebSocket-related issues, inspect both the Nginx and API logs:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs -f nginx api
+```
+
+Look for:
+
+* failed WebSocket upgrades
+* authentication failures
+* unexpected disconnects
+* application exceptions
+* repeated container restarts
+* database connection failures
+* Redis connection failures
 
 ---
 
@@ -232,7 +318,16 @@ docker compose \
   up -d
 ```
 
-Apply new migrations:
+Verify the containers:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  ps
+```
+
+Apply new migrations when required:
 
 ```bash
 docker compose \
@@ -240,6 +335,16 @@ docker compose \
   -f docker-compose.prod.yml \
   exec api alembic upgrade head
 ```
+
+After an update, verify:
+
+* API health
+* database connectivity
+* Redis connectivity
+* Celery worker status
+* WebSocket connectivity
+* Prometheus metrics
+* application logs
 
 ---
 
@@ -252,6 +357,8 @@ TalentForge includes an automated deployment script:
 ```
 
 The script automates the deployment workflow.
+
+When using the script, review its behavior before executing it against a production environment.
 
 ---
 
@@ -266,30 +373,211 @@ docker compose \
   down
 ```
 
+Stopping the stack terminates the running application containers.
+
+Before stopping a production environment, confirm that active workloads and background jobs can safely be interrupted.
+
+---
+
+# Rollback
+
+If a deployment introduces an application failure, revert to a previously known-good image version.
+
+The rollback process should follow this general workflow:
+
+```text
+Identify Failure
+      │
+      ▼
+Inspect Logs
+      │
+      ▼
+Identify Known-Good Image
+      │
+      ▼
+Deploy Previous Version
+      │
+      ▼
+Verify Health
+      │
+      ▼
+Verify WebSocket
+      │
+      ▼
+Verify Background Workers
+```
+
+Avoid automatically rolling back database migrations without first reviewing whether the migration is backward-compatible.
+
+Database rollback procedures should be treated separately from application image rollback.
+
 ---
 
 # Production Checklist
 
 Before exposing TalentForge publicly:
 
-- [ ] Use strong production secrets
-- [ ] Configure HTTPS
-- [ ] Restrict database access
-- [ ] Configure database backups
-- [ ] Monitor application metrics
-- [ ] Rotate credentials regularly
-- [ ] Review container security
-- [ ] Configure proper logging
+### Security
+
+* [ ] Use strong production secrets
+* [ ] Never commit `.env.prod`
+* [ ] Configure HTTPS
+* [ ] Use WSS for production WebSocket connections
+* [ ] Restrict PostgreSQL access
+* [ ] Restrict Redis access
+* [ ] Review container permissions
+* [ ] Review exposed ports
+
+### Application
+
+* [ ] Apply database migrations
+* [ ] Verify API health endpoint
+* [ ] Verify authentication
+* [ ] Verify WebSocket authentication
+* [ ] Verify WebSocket interview access control
+* [ ] Verify answer submission
+* [ ] Verify Celery workers
+
+### Operations
+
+* [ ] Configure database backups
+* [ ] Monitor application metrics
+* [ ] Configure proper logging
+* [ ] Verify Prometheus collection
+* [ ] Verify Grafana dashboards
+* [ ] Test deployment rollback procedure
+* [ ] Rotate credentials regularly
+
+---
+
+# Troubleshooting
+
+## API Is Not Responding
+
+Check the container status:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  ps
+```
+
+Then inspect API logs:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs --tail=200 api
+```
+
+---
+
+## Database Connection Failure
+
+Check PostgreSQL status:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  ps postgres
+```
+
+Then inspect PostgreSQL logs:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs --tail=200 postgres
+```
+
+Verify that `DATABASE_URL` and the PostgreSQL credentials are correctly configured.
+
+---
+
+## Redis or Celery Failure
+
+Inspect Redis:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs --tail=200 redis
+```
+
+Inspect Celery:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs --tail=200 celery_worker
+```
+
+Verify that the configured `REDIS_URL` is reachable from the application and Celery worker.
+
+---
+
+## WebSocket Connection Failure
+
+Check both Nginx and FastAPI logs:
+
+```bash
+docker compose \
+  --env-file .env.prod \
+  -f docker-compose.prod.yml \
+  logs --tail=200 nginx api
+```
+
+Verify:
+
+* the client is using the correct WebSocket URL
+* production uses `wss://` when HTTPS is enabled
+* the `/ws/` path is forwarded by Nginx
+* the JWT is supplied correctly
+* the JWT is valid
+* the user has access to the interview
+* the FastAPI application is running
+* Nginx supports WebSocket upgrade forwarding
+
+A WebSocket failure should be investigated across the complete path:
+
+```text
+Client
+  │
+  ▼
+HTTPS / WSS
+  │
+  ▼
+Nginx
+  │
+  ▼
+FastAPI WebSocket Router
+  │
+  ▼
+Authentication
+  │
+  ▼
+Interview Access
+```
 
 ---
 
 # Future Improvements
 
-Potential production improvements:
+Potential production improvements include:
 
-- Kubernetes deployment
-- Horizontal scaling
-- Automated database backups
-- Cloud object storage for resume files
-- Managed PostgreSQL deployment
-- Advanced observability stack
+* Kubernetes deployment
+* Horizontal scaling
+* Automated database backups
+* Cloud object storage for resume files
+* Managed PostgreSQL deployment
+* Advanced observability stack
+* WebSocket connection scaling across multiple application instances
+* Redis-backed distributed WebSocket coordination
+* Automated deployment rollback
+* Zero-downtime deployment strategies
