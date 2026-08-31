@@ -70,6 +70,8 @@ cp .env.example .env.prod
 Configure the required environment variables:
 
 ```env
+ENVIRONMENT=production
+
 SECRET_KEY=
 
 DATABASE_URL=
@@ -91,6 +93,40 @@ OLLAMA_BASE_URL=
 > **Never commit production secrets to version control.**
 
 Production credentials should be strong, unique, and stored securely.
+
+The `ENVIRONMENT=production` setting enables production-specific application behavior, including API documentation hardening.
+
+---
+
+# API Documentation Exposure
+
+TalentForge uses environment-aware API documentation behavior.
+
+When the application runs with:
+
+```env
+ENVIRONMENT=production
+```
+
+the following FastAPI documentation endpoints are disabled:
+
+```text
+/docs
+/redoc
+/openapi.json
+```
+
+This prevents the interactive Swagger UI, ReDoc interface, and generated OpenAPI schema from being exposed through the production application.
+
+Development and testing environments retain API documentation to support local development and API testing.
+
+For example, the development Swagger UI is available at:
+
+```text
+http://localhost:8000/docs
+```
+
+API documentation exposure should therefore be verified as part of production deployment validation.
 
 ---
 
@@ -339,6 +375,7 @@ docker compose \
 After an update, verify:
 
 * API health
+* API documentation exposure
 * database connectivity
 * Redis connectivity
 * Celery worker status
@@ -427,9 +464,14 @@ Before exposing TalentForge publicly:
 * [ ] Restrict Redis access
 * [ ] Review container permissions
 * [ ] Review exposed ports
+* [ ] Verify `/docs` is not publicly available
+* [ ] Verify `/redoc` is not publicly available
+* [ ] Verify `/openapi.json` is not publicly available
+* [ ] Verify production API documentation exposure is disabled
 
 ### Application
 
+* [ ] Set `ENVIRONMENT=production`
 * [ ] Apply database migrations
 * [ ] Verify API health endpoint
 * [ ] Verify authentication
@@ -564,6 +606,28 @@ Authentication
   ▼
 Interview Access
 ```
+
+---
+
+## API Documentation Is Unexpectedly Available
+
+If API documentation is accessible in production, first verify that the application is actually running with:
+
+```env
+ENVIRONMENT=production
+```
+
+Then verify the production container environment and deployment configuration.
+
+The following endpoints should not be available when production mode is active:
+
+```text
+/docs
+/redoc
+/openapi.json
+```
+
+If the endpoints remain accessible, inspect the running application configuration before considering the deployment successful.
 
 ---
 
