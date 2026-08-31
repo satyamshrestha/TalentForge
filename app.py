@@ -48,6 +48,9 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="AI-powered interview preparation platform.",
     lifespan=lifespan,
+    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    openapi_url="/openapi.json" if settings.ENVIRONMENT != "production" else None,
 )
 
 
@@ -146,14 +149,11 @@ async def unexpected_exception_handler(
         },
     )
 
-
 @app.get(
     "/",
     tags=["Health"],
 )
 def home():
     return {
-        "name": settings.APP_NAME,
         "status": "running",
-        "version": settings.APP_VERSION,
     }
