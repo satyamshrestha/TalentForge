@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 text.txt
 uploads
+test.db
