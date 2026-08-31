@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     ALGORITHM: str
     DATABASE_URL: str
     REDIS_URL: str
+    ENVIRONMENT: Literal[
+        "development",
+        "testing",
+        "production",
+    ] = "development"
+    
     TESTING: bool = False
     APP_NAME: str = "TalentForge API"
     APP_VERSION: str = "1.0.0"
