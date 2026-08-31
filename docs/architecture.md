@@ -1007,7 +1007,64 @@ Nginx is responsible for the external entry point and reverse proxying of both H
 
 Docker provides consistent environments across development and deployment.
 
-18. CI/CD Architecture
+18. Health Check Architecture
+
+TalentForge exposes dedicated health endpoints for application monitoring
+and container orchestration.
+
+The health-check system separates liveness from readiness.
+
+Liveness Probe
+
+GET /health/live
+
+The liveness endpoint verifies that the FastAPI application process is
+running.
+
+It does not perform dependency checks.
+
+Example response:
+
+{
+    "status": "alive"
+}
+
+Readiness Probe
+
+GET /health/ready
+
+The readiness endpoint verifies that the application can handle requests
+by checking connectivity to its critical infrastructure dependencies:
+
+PostgreSQL
+Redis
+
+The readiness flow is:
+
+Client / Monitoring System
+          │
+          ▼
+   /health/ready
+          │
+     ┌────┴────┐
+     ▼         ▼
+PostgreSQL    Redis
+     │         │
+     └────┬────┘
+          ▼
+       Ready
+
+If both dependencies are available, the endpoint returns a successful
+response indicating that the service is ready.
+
+If a dependency check fails, the endpoint returns HTTP 503 Service
+Unavailable.
+
+This distinction allows infrastructure and monitoring systems to determine
+whether the application process is alive and whether it is currently
+capable of serving requests.
+
+19. CI/CD Architecture
 
 GitHub Actions is used to validate changes automatically.
 
@@ -1032,7 +1089,7 @@ Push Image
 
 The pipeline provides an automated quality gate before a new application image is published.
 
-19. Dependency Flow
+20. Dependency Flow
 
 A major architectural principle is controlling dependency direction.
 
@@ -1072,7 +1129,7 @@ Infrastructure components such as Redis and Celery are accessed through their re
 
 This keeps transport concerns separate from business logic.
 
-20. Design Principles
+21. Design Principles
 
 TalentForge is built around the following principles.
 
@@ -1120,7 +1177,7 @@ Automated Validation
 
 Tests and Docker builds are integrated into CI/CD.
 
-21. Architectural Goal
+22. Architectural Goal
 
 TalentForge is intentionally structured as more than a conventional CRUD backend.
 
