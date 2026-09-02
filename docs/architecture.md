@@ -444,7 +444,7 @@ Ollama
 
 Ollama is used as the primary model backend for the current system.
 
-An OpenAI provider exists in the codebase as a placeholder for future integration and is not the current production AI backend.
+The current AI provider implementation is Ollama, while the provider abstraction keeps AI services independent of the underlying model backend.
 
 This architecture allows additional providers to be introduced without rewriting the business logic inside:
 
@@ -1093,7 +1093,7 @@ The pipeline provides an automated quality gate before a new application image i
 
 A major architectural principle is controlling dependency direction.
 
-The intended REST flow is:
+The REST application flow is:
 
 Router
   ↓
@@ -1103,7 +1103,7 @@ Repository
   ↓
 Database
 
-The intended WebSocket flow is:
+The WebSocket application flow is:
 
 WebSocket Layer
   ↓
@@ -1205,4 +1205,4 @@ Containerization
     ↓
 CI/CD
 
-The goal is to evolve TalentForge as a maintainable, testable, observable, and deployable backend system while keeping the architecture understandable as the project grows.
+TalentForge is structured as a maintainable, testable, observable, and deployable backend system while keeping the architecture understandable and its responsibilities clearly separated.
