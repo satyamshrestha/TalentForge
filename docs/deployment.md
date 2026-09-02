@@ -628,20 +628,3 @@ The following endpoints should not be available when production mode is active:
 ```
 
 If the endpoints remain accessible, inspect the running application configuration before considering the deployment successful.
-
----
-
-# Future Improvements
-
-Potential production improvements include:
-
-* Kubernetes deployment
-* Horizontal scaling
-* Automated database backups
-* Cloud object storage for resume files
-* Managed PostgreSQL deployment
-* Advanced observability stack
-* WebSocket connection scaling across multiple application instances
-* Redis-backed distributed WebSocket coordination
-* Automated deployment rollback
-* Zero-downtime deployment strategies
