@@ -902,39 +902,30 @@ The project emphasizes:
 
 ---
 
-# 🧭 Project Direction
+# 🧭 Project Scope
 
-TalentForge is being developed as a long-term backend engineering project with an emphasis on engineering depth rather than continuous feature expansion.
+TalentForge is a completed backend engineering project focused on demonstrating production-oriented software engineering practices through a functional AI-powered interview platform.
 
-The current system focuses on demonstrating production-oriented backend practices across:
+The implemented system covers:
 
 * Clean architecture and separation of concerns
 * Authentication and authorization
 * AI provider abstraction
+* Resume processing and AI analysis
+* AI-generated interview questions
+* AI-powered answer evaluation
 * Asynchronous processing
 * Real-time WebSocket communication
 * Database persistence and migrations
-* Caching
+* Redis caching
 * Audit logging
-* Testing
-* Observability
+* Automated testing
+* Observability and metrics
 * Containerized deployment
 * CI/CD
 
-Future engineering work will focus on strengthening the existing system rather than simply adding more application features.
+The project intentionally focuses on a well-defined, functional backend scope rather than continuous feature expansion. Its architecture demonstrates how these components can be integrated into a maintainable, testable, observable, and deployable backend system.
 
-Planned areas include:
-
-* Advanced observability
-* Production deployment hardening
-* Performance optimization
-* Distributed-system patterns
-* Scalability improvements
-* Advanced system design
-* Additional AI provider integrations
-* Infrastructure improvements
-
-The long-term objective is to evolve TalentForge into a polished, production-style backend system that demonstrates practical software engineering, architecture, reliability, and scalability skills.
 
 ---
 
