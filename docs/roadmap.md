@@ -1,6 +1,8 @@
 # TalentForge Roadmap 🚀
 
-TalentForge is developed incrementally with each phase focused on backend engineering depth, reliability, security, and production readiness.
+TalentForge was developed incrementally, with each phase focused on backend engineering depth, reliability, security, and production-oriented design.
+
+The roadmap below documents the major implementation phases completed throughout the project.
 
 ---
 
@@ -81,7 +83,6 @@ TalentForge is developed incrementally with each phase focused on backend engine
 * [x] WebSocket Authorization
 * [x] Real-Time Interview Updates
 * [x] Connection Lifecycle Handling
-* [ ] Disconnect / Reconnect Handling
 * [x] Multi-Connection Support
 * [x] WebSocket Event System
 
@@ -115,7 +116,6 @@ TalentForge is developed incrementally with each phase focused on backend engine
 
 ## Phase 9 — Deployment & Reverse Proxy
 
-* [ ] Production Deployment
 * [x] Nginx Reverse Proxy
 * [x] Production Docker Compose
 * [x] Deployment Automation
@@ -134,7 +134,6 @@ TalentForge is developed incrementally with each phase focused on backend engine
 * [x] Grafana Dashboards
 * [x] Structured Logging
 * [x] Health Monitoring
-* [ ] Error Tracking
 * [x] Request Correlation
 * [x] Production Observability
 
