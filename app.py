@@ -15,7 +15,7 @@ from middleware.logging_middleware import LoggingMiddleware
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.rate_limit import limiter
 from middleware.metrics_middleware import MetricsMiddleware
-from routers import metrics_router, websocket_router
+from routers import metrics_router
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from utils.config import settings
@@ -102,7 +102,6 @@ app.include_router(
     api_router,
     prefix="/api/v1",
 )
-api_router.include_router(websocket_router.router)
 app.include_router(
     metrics_router.router
 )
@@ -158,10 +157,3 @@ def home():
     return {
         "status": "running",
     }
-
-for route in api_router.routes:
-    print(
-        "API ROUTE:",
-        getattr(route, "path", None),
-        type(route).__name__,
-    )
