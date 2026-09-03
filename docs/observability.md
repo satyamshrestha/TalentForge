@@ -56,7 +56,7 @@ TalentForge currently establishes observability through:
 * Background task state tracking
 * WebSocket lifecycle and error logging
 
-More advanced capabilities such as distributed tracing and centralized log aggregation can be introduced as the system evolves.
+Advanced observability capabilities such as distributed tracing and centralized log aggregation are outside the current project scope. The implemented observability stack provides the operational visibility required by the current TalentForge deployment.
 
 ---
 
@@ -768,9 +768,7 @@ Unexpected disconnects
 Connection duration
 ```
 
-These measurements can be introduced as dedicated metrics as the real-time system grows.
-
-The current implementation primarily provides lifecycle and failure visibility through application behavior and logging.
+The current implementation provides WebSocket lifecycle and failure visibility through application behavior and logging. Dedicated WebSocket metrics are outside the current observability scope.
 
 ---
 
@@ -834,21 +832,18 @@ FAILED
 
 This provides application-level visibility into the progress of asynchronous resume processing.
 
-Future improvements can expose dedicated Celery metrics such as:
+The current implementation provides background-processing visibility through Celery task execution, application logging, and resume processing states.
+
+The observability model therefore covers the important application-level states:
 
 ```text
-Tasks submitted
-
-Tasks completed
-
-Tasks failed
-
-Task duration
-
-Retry count
-
-Queue depth
+PENDING
+PROCESSING
+COMPLETED
+FAILED
 ```
+
+Dedicated queue-depth and worker-performance metrics are outside the current observability scope.
 
 ---
 
@@ -959,25 +954,19 @@ Service
 
 A production investigation should determine which dependency is responsible for the observed failure rather than treating every failure as an API problem.
 
-Future infrastructure metrics can provide deeper visibility into:
+The current observability architecture distinguishes failures across the major infrastructure dependencies:
 
 ```text
-Database connection usage
-
-Database latency
-
-Slow queries
-
-Redis availability
-
-Redis latency
-
-Cache hit rate
-
-Celery queue depth
+Application failure
+Database failure
+Cache failure
+AI provider failure
+Background worker failure
 ```
 
-These capabilities can be added as the deployment becomes more distributed.
+This separation helps production investigations determine which dependency is responsible for an observed failure.
+
+Detailed infrastructure-level performance metrics are outside the current observability scope.
 
 ---
 
@@ -1235,11 +1224,9 @@ The current TalentForge observability stack consists of:
 
 ---
 
-# 22. Current vs Future Observability
+# 22. Implemented Observability Stack
 
-TalentForge intentionally distinguishes between capabilities that are implemented and capabilities that are planned.
-
-### Currently Implemented
+TalentForge provides the following observability capabilities:
 
 ```text
 Application logging
@@ -1263,187 +1250,13 @@ WebSocket error logging
 WebSocket event infrastructure
 ```
 
-### Future Enhancements
+These components provide visibility across HTTP requests, application errors, service health, asynchronous processing, AI operations, and real-time WebSocket activity.
 
-```text
-Distributed tracing
-
-OpenTelemetry
-
-Centralized log aggregation
-
-Loki
-
-Elasticsearch
-
-Dedicated WebSocket metrics
-
-Celery queue metrics
-
-Database performance metrics
-
-Redis performance metrics
-
-Advanced alerting
-
-Automated incident management
-```
-
-This distinction prevents the project documentation from claiming operational capabilities that have not yet been implemented.
+The observability stack is intentionally focused on the operational requirements of the current TalentForge deployment.
 
 ---
 
-# 23. What Is Not Currently Implemented
-
-TalentForge currently focuses on a practical observability foundation rather than implementing every observability technology.
-
-The project does not currently require:
-
-* Distributed tracing
-* OpenTelemetry
-* Centralized log aggregation
-* Loki
-* Elasticsearch
-* Automated incident management
-* Advanced alert routing
-* Dedicated WebSocket Prometheus metrics
-* Full distributed request tracing
-
-These can be introduced later if the system requires them.
-
-The architecture intentionally leaves room for these capabilities without requiring them for the current deployment.
-
----
-
-# 24. Future Improvements
-
-Potential future observability improvements include:
-
-### Distributed Tracing
-
-Introduce OpenTelemetry to trace requests across:
-
-```text
-Nginx
-
-  ↓
-
-FastAPI
-
-  ↓
-
-PostgreSQL
-
-  ↓
-
-Redis
-
-  ↓
-
-Celery
-
-  ↓
-
-Ollama
-```
-
-For WebSocket workloads, tracing can additionally cover:
-
-```text
-WebSocket Connection
-
-       ↓
-
-Authentication
-
-       ↓
-
-Message Processing
-
-       ↓
-
-Answer Service
-
-       ↓
-
-AI Evaluation
-```
-
-### Centralized Logging
-
-Move application logs into a centralized logging system so that logs can be searched across multiple containers.
-
-### Alerting
-
-Introduce alerts for conditions such as:
-
-```text
-High 5xx rate
-
-High request latency
-
-Celery task failures
-
-Database availability problems
-
-Redis failures
-
-AI provider failures
-
-WebSocket failure spikes
-```
-
-### Advanced Dashboards
-
-Expand Grafana dashboards with operational views covering:
-
-```text
-API performance
-
-Database activity
-
-Redis activity
-
-Celery processing
-
-AI latency
-
-Error rates
-
-WebSocket activity
-```
-
-### Correlation IDs
-
-Introduce consistent correlation or request IDs across HTTP, background tasks, and real-time workflows.
-
-A future distributed flow could therefore be traceable as:
-
-```text
-Request ID
-
-   ↓
-
-FastAPI Request
-
-   ↓
-
-Celery Task
-
-   ↓
-
-AI Operation
-
-   ↓
-
-Database Update
-```
-
-This becomes increasingly valuable when multiple services and workers are running simultaneously.
-
----
-
-# 25. Observability Principle
+# 23. Observability Principle
 
 The main principle behind TalentForge's observability architecture is:
 
@@ -1461,7 +1274,7 @@ This prevents monitoring systems from becoming overloaded with high-cardinality 
 
 ---
 
-# 26. Summary
+# 24. Summary
 
 TalentForge currently provides a practical observability foundation:
 
@@ -1513,4 +1326,4 @@ WebSocket failures
 Real-time application events
 ```
 
-This provides the foundation required to monitor application behavior today while leaving room for more advanced tracing, logging aggregation, alerting, infrastructure metrics, and distributed observability as TalentForge evolves.
+This observability foundation provides the operational visibility required by the current TalentForge deployment across HTTP requests, application errors, service health, background processing, AI operations, and WebSocket activity.
